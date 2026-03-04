@@ -55,6 +55,14 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'Replicate:Permission']);
         Permission::create(['name' => 'Reorder:Permission']);
 
+        // create permissions for model_has_roles pivot (assigning roles to users)
+        Permission::create(['name' => 'AssignRole:User']);
+        Permission::create(['name' => 'RevokeRole:User']);
+
+        // create permissions for role_has_permissions pivot (assigning permissions to roles)
+        Permission::create(['name' => 'AssignPermission:Role']);
+        Permission::create(['name' => 'RevokePermission:Role']);
+
         // create permissions for property model
         Permission::create(['name' => 'ViewAny:Property']);
         Permission::create(['name' => 'View:Property']);
