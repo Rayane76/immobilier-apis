@@ -28,6 +28,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->enum('type', ['string', 'integer', 'decimal', 'boolean']);
             $table->jsonb('options')->nullable();
+            $table->decimal('min_value', 15, 8)->nullable();
+            $table->decimal('max_value', 15, 8)->nullable();
             $table->boolean('is_filterable')->default(false);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

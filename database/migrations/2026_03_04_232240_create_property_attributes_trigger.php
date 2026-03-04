@@ -31,6 +31,7 @@ return new class extends Migration
             DECLARE
                 v_key        TEXT;
                 v_value      JSONB;
+                v_num        NUMERIC;
                 v_def        RECORD;
             BEGIN
                 -- 1. Null attributes are always valid
@@ -47,8 +48,11 @@ return new class extends Migration
                 -- 3. Validate each attribute definition linked to this property type
                 FOR v_def IN
                     SELECT
-                        a.title   AS key,
-                        a.type    AS type,
+                        a.title     AS key,
+                        a.type      AS type,
+                        a.options   AS options,
+                        a.min_value AS min_value,
+                        a.max_value AS max_value,
                         pta.is_required
                     FROM property_type_attributes pta
                     INNER JOIN attributes a
@@ -66,7 +70,7 @@ return new class extends Migration
                             USING ERRCODE = 'check_violation';
                     END IF;
 
-                    -- 3b. Skip type check when the field is absent / null
+                    -- 3b. Skip further checks when the field is absent / null
                     CONTINUE WHEN v_value IS NULL OR v_value = 'null'::jsonb;
 
                     -- 3c. Type validation against the attributes.type enum
@@ -79,6 +83,18 @@ return new class extends Migration
                                     USING ERRCODE = 'check_violation';
                             END IF;
 
+                            -- 3d. If options are defined (array with at least one entry)
+                            --     the value must be one of those options
+                            IF v_def.options IS NOT NULL
+                                AND jsonb_typeof(v_def.options) = 'array'
+                                AND jsonb_array_length(v_def.options) > 0
+                                AND NOT (v_def.options @> jsonb_build_array(v_value))
+                            THEN
+                                RAISE EXCEPTION 'Attribute "%" value % is not in the allowed options: %',
+                                    v_def.key, v_value, v_def.options
+                                    USING ERRCODE = 'check_violation';
+                            END IF;
+
                         WHEN 'integer' THEN
                             IF jsonb_typeof(v_value) != 'number'
                                 OR v_value::text ~ '\.'
@@ -88,10 +104,36 @@ return new class extends Migration
                                     USING ERRCODE = 'check_violation';
                             END IF;
 
+                            -- 3e. Range check
+                            v_num := (v_value #>> '{}')::numeric;
+                            IF v_def.min_value IS NOT NULL AND v_num < v_def.min_value THEN
+                                RAISE EXCEPTION 'Attribute "%" value % is below minimum %',
+                                    v_def.key, v_num, v_def.min_value
+                                    USING ERRCODE = 'check_violation';
+                            END IF;
+                            IF v_def.max_value IS NOT NULL AND v_num > v_def.max_value THEN
+                                RAISE EXCEPTION 'Attribute "%" value % exceeds maximum %',
+                                    v_def.key, v_num, v_def.max_value
+                                    USING ERRCODE = 'check_violation';
+                            END IF;
+
                         WHEN 'decimal' THEN
                             IF jsonb_typeof(v_value) != 'number' THEN
                                 RAISE EXCEPTION 'Attribute "%" must be a decimal number, got: %',
                                     v_def.key, v_value
+                                    USING ERRCODE = 'check_violation';
+                            END IF;
+
+                            -- 3e. Range check
+                            v_num := (v_value #>> '{}')::numeric;
+                            IF v_def.min_value IS NOT NULL AND v_num < v_def.min_value THEN
+                                RAISE EXCEPTION 'Attribute "%" value % is below minimum %',
+                                    v_def.key, v_num, v_def.min_value
+                                    USING ERRCODE = 'check_violation';
+                            END IF;
+                            IF v_def.max_value IS NOT NULL AND v_num > v_def.max_value THEN
+                                RAISE EXCEPTION 'Attribute "%" value % exceeds maximum %',
+                                    v_def.key, v_num, v_def.max_value
                                     USING ERRCODE = 'check_violation';
                             END IF;
 
