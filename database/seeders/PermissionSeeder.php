@@ -58,8 +58,6 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'RevokePermission:Role']);
 
         // create permissions for property model
-        Permission::create(['name' => 'ViewAny:Property']);
-        Permission::create(['name' => 'View:Property']);
         Permission::create(['name' => 'Create:Property']);
         Permission::create(['name' => 'Update:Property']);
         Permission::create(['name' => 'Delete:Property']);
@@ -79,24 +77,102 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'ForceDeleteAny:Image']);
         Permission::create(['name' => 'RestoreAny:Image']);
 
-        $agent = Role::create(['name' => 'agent']);
-        $agent->givePermissionTo('ViewAny:Property');
-        $agent->givePermissionTo('View:Property');
-        $agent->givePermissionTo('Create:Property');
-        $agent->givePermissionTo('Update:Property');
-        $agent->givePermissionTo('Delete:Property');
-        $agent->givePermissionTo('ViewAny:Image');
-        $agent->givePermissionTo('View:Image');
-        $agent->givePermissionTo('Create:Image');
-        $agent->givePermissionTo('Update:Image');
-        $agent->givePermissionTo('Delete:Image');
+        // create permissions for attribute model
+        Permission::create(['name' => 'Create:Attribute']);
+        Permission::create(['name' => 'Update:Attribute']);
+        Permission::create(['name' => 'Delete:Attribute']);
+        Permission::create(['name' => 'Restore:Attribute']);
+        Permission::create(['name' => 'ForceDelete:Attribute']);
+        Permission::create(['name' => 'ForceDeleteAny:Attribute']);
+        Permission::create(['name' => 'RestoreAny:Attribute']);
 
+        // create permissions for property type model
+        Permission::create(['name' => 'Create:PropertyType']);
+        Permission::create(['name' => 'Update:PropertyType']);
+        Permission::create(['name' => 'Delete:PropertyType']);
+        Permission::create(['name' => 'Restore:PropertyType']);
+        Permission::create(['name' => 'ForceDelete:PropertyType']);
+        Permission::create(['name' => 'ForceDeleteAny:PropertyType']);
+        Permission::create(['name' => 'RestoreAny:PropertyType']);
+
+        // create permissions for property type attribute pivot model (no soft deletes)
+        Permission::create(['name' => 'ViewAny:PropertyTypeAttribute']);
+        Permission::create(['name' => 'View:PropertyTypeAttribute']);
+        Permission::create(['name' => 'Create:PropertyTypeAttribute']);
+        Permission::create(['name' => 'Update:PropertyTypeAttribute']);
+        Permission::create(['name' => 'Delete:PropertyTypeAttribute']);
+
+        // create permissions for region model
+        Permission::create(['name' => 'Create:Region']);
+        Permission::create(['name' => 'Update:Region']);
+        Permission::create(['name' => 'Delete:Region']);
+        Permission::create(['name' => 'Restore:Region']);
+        Permission::create(['name' => 'ForceDelete:Region']);
+        Permission::create(['name' => 'ForceDeleteAny:Region']);
+        Permission::create(['name' => 'RestoreAny:Region']);
+
+        // -------------------------------------------------------------------------
+        // agent role
+        // Can manage all business models.
+        // On Property: can only act on records they created (enforced by policy).
+        // ForceDeleteAny / RestoreAny are intentionally NOT granted — those are
+        // reserved for Super-Admin who bypasses policies via Gate::before.
+        // -------------------------------------------------------------------------
+        $agent = Role::create(['name' => 'agent']);
+
+        $agent->givePermissionTo([
+            // Property (own records only — ownership enforced in PropertyPolicy)
+            'Create:Property',
+            'Update:Property',
+            'Delete:Property',
+            'Restore:Property',
+            'ForceDelete:Property',
+
+            // Image
+            'ViewAny:Image',
+            'View:Image',
+            'Create:Image',
+            'Update:Image',
+            'Delete:Image',
+            'Restore:Image',
+            'ForceDelete:Image',
+
+            // Attribute
+            'Create:Attribute',
+            'Update:Attribute',
+            'Delete:Attribute',
+            'Restore:Attribute',
+            'ForceDelete:Attribute',
+
+            // PropertyType
+            'Create:PropertyType',
+            'Update:PropertyType',
+            'Delete:PropertyType',
+            'Restore:PropertyType',
+            'ForceDelete:PropertyType',
+
+            // PropertyTypeAttribute (no soft deletes)
+            'ViewAny:PropertyTypeAttribute',
+            'View:PropertyTypeAttribute',
+            'Create:PropertyTypeAttribute',
+            'Update:PropertyTypeAttribute',
+            'Delete:PropertyTypeAttribute',
+
+            // Region
+            'Create:Region',
+            'Update:Region',
+            'Delete:Region',
+            'Restore:Region',
+            'ForceDelete:Region',
+        ]);
+
+        // -------------------------------------------------------------------------
+        // visiteur role — read-only access to published listings only
+        // -------------------------------------------------------------------------
         $visiteur = Role::create(['name' => 'visiteur']);
-        $visiteur->givePermissionTo('ViewAny:Property');
-        $visiteur->givePermissionTo('View:Property');
 
         $superAdmin = Role::create(['name' => 'Super-Admin']);
-        // gets all permissions via Gate::before rule; see AuthServiceProvider
+        // gets all permissions via Gate::before rule; see AppServiceProvider
 
         // create demo users
         $user = \App\Models\User::factory()->create([

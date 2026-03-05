@@ -4,63 +4,66 @@ namespace App\Policies;
 
 use App\Models\Property;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class PropertyPolicy
 {
+    // Visiteurs hold ViewAny:Property + View:Property — granted in the seeder.
+    // All other authenticated roles hold the full set.
+    // Ownership (created_by) is enforced on write operations at the instance level.
+    // Super-Admin bypasses all methods via Gate::before in AppServiceProvider.
+
     /**
-     * Determine whether the user can view any models.
+     * Anyone — including unauthenticated guests — can browse the listing.
      */
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Anyone — including unauthenticated guests — can view a single property.
      */
-    public function view(User $user, Property $property): bool
+    public function view(?User $user, Property $property): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('Create:Property');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Property $property): bool
     {
-        return false;
+        return $user->can('Update:Property')
+            && $property->created_by === $user->id;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Property $property): bool
     {
-        return false;
+        return $user->can('Delete:Property')
+            && $property->created_by === $user->id;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Property $property): bool
     {
-        return false;
+        return $user->can('Restore:Property')
+            && $property->created_by === $user->id;
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Property $property): bool
     {
-        return false;
+        return $user->can('ForceDelete:Property')
+            && $property->created_by === $user->id;
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('ForceDeleteAny:Property');
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('RestoreAny:Property');
     }
 }
