@@ -17,99 +17,99 @@ class PermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // create permissions for user model
-        Permission::create(['name' => 'ViewAny:User']);
-        Permission::create(['name' => 'View:User']);
-        Permission::create(['name' => 'Create:User']);
-        Permission::create(['name' => 'Update:User']);
-        Permission::create(['name' => 'Delete:User']);
-        Permission::create(['name' => 'Restore:User']);
-        Permission::create(['name' => 'ForceDelete:User']);
-        Permission::create(['name' => 'ForceDeleteAny:User']);
-        Permission::create(['name' => 'RestoreAny:User']);
+        Permission::create(['name' => 'ViewAny:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'View:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Create:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:User', 'guard_name' => 'web']);
 
         //create permissions for role model
-        Permission::create(['name' => 'ViewAny:Role']);
-        Permission::create(['name' => 'View:Role']);
-        Permission::create(['name' => 'Create:Role']);
-        Permission::create(['name' => 'Update:Role']);
-        Permission::create(['name' => 'Delete:Role']);
-        Permission::create(['name' => 'Restore:Role']);
-        Permission::create(['name' => 'ForceDelete:Role']);
-        Permission::create(['name' => 'ForceDeleteAny:Role']);
-        Permission::create(['name' => 'RestoreAny:Role']);
+        Permission::create(['name' => 'ViewAny:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'View:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Create:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:Role', 'guard_name' => 'web']);
 
         // create permissions for permission model
-        Permission::create(['name' => 'ViewAny:Permission']);
-        Permission::create(['name' => 'View:Permission']);
-        Permission::create(['name' => 'Create:Permission']);
-        Permission::create(['name' => 'Update:Permission']);
-        Permission::create(['name' => 'Delete:Permission']);
-        Permission::create(['name' => 'Restore:Permission']);
-        Permission::create(['name' => 'ForceDelete:Permission']);
-        Permission::create(['name' => 'ForceDeleteAny:Permission']);
-        Permission::create(['name' => 'RestoreAny:Permission']);
+        Permission::create(['name' => 'ViewAny:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'View:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Create:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:Permission', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:Permission', 'guard_name' => 'web']);
 
         // create permissions for model_has_roles pivot (assigning roles to users)
-        Permission::create(['name' => 'AssignRole:User']);
-        Permission::create(['name' => 'RevokeRole:User']);
+        Permission::create(['name' => 'AssignRole:User', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RevokeRole:User', 'guard_name' => 'web']);
 
         // create permissions for role_has_permissions pivot (assigning permissions to roles)
-        Permission::create(['name' => 'AssignPermission:Role']);
-        Permission::create(['name' => 'RevokePermission:Role']);
+        Permission::create(['name' => 'AssignPermission:Role', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RevokePermission:Role', 'guard_name' => 'web']);
 
         // create permissions for property model
-        Permission::create(['name' => 'Create:Property']);
-        Permission::create(['name' => 'Update:Property']);
-        Permission::create(['name' => 'Delete:Property']);
-        Permission::create(['name' => 'Restore:Property']);
-        Permission::create(['name' => 'ForceDelete:Property']);
-        Permission::create(['name' => 'ForceDeleteAny:Property']);
-        Permission::create(['name' => 'RestoreAny:Property']);
+        Permission::create(['name' => 'Create:Property', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:Property', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:Property', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:Property', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:Property', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:Property', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:Property', 'guard_name' => 'web']);
 
         // create permissions for image model
-        Permission::create(['name' => 'ViewAny:Image']);
-        Permission::create(['name' => 'View:Image']);
-        Permission::create(['name' => 'Create:Image']);
-        Permission::create(['name' => 'Update:Image']);
-        Permission::create(['name' => 'Delete:Image']);
-        Permission::create(['name' => 'Restore:Image']);
-        Permission::create(['name' => 'ForceDelete:Image']);
-        Permission::create(['name' => 'ForceDeleteAny:Image']);
-        Permission::create(['name' => 'RestoreAny:Image']);
+        Permission::create(['name' => 'ViewAny:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'View:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Create:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:Image', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:Image', 'guard_name' => 'web']);
 
         // create permissions for attribute model
-        Permission::create(['name' => 'Create:Attribute']);
-        Permission::create(['name' => 'Update:Attribute']);
-        Permission::create(['name' => 'Delete:Attribute']);
-        Permission::create(['name' => 'Restore:Attribute']);
-        Permission::create(['name' => 'ForceDelete:Attribute']);
-        Permission::create(['name' => 'ForceDeleteAny:Attribute']);
-        Permission::create(['name' => 'RestoreAny:Attribute']);
+        Permission::create(['name' => 'Create:Attribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:Attribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:Attribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:Attribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:Attribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:Attribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:Attribute', 'guard_name' => 'web']);
 
         // create permissions for property type model
-        Permission::create(['name' => 'Create:PropertyType']);
-        Permission::create(['name' => 'Update:PropertyType']);
-        Permission::create(['name' => 'Delete:PropertyType']);
-        Permission::create(['name' => 'Restore:PropertyType']);
-        Permission::create(['name' => 'ForceDelete:PropertyType']);
-        Permission::create(['name' => 'ForceDeleteAny:PropertyType']);
-        Permission::create(['name' => 'RestoreAny:PropertyType']);
+        Permission::create(['name' => 'Create:PropertyType', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:PropertyType', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:PropertyType', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:PropertyType', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:PropertyType', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:PropertyType', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:PropertyType', 'guard_name' => 'web']);
 
         // create permissions for property type attribute pivot model (no soft deletes)
-        Permission::create(['name' => 'ViewAny:PropertyTypeAttribute']);
-        Permission::create(['name' => 'View:PropertyTypeAttribute']);
-        Permission::create(['name' => 'Create:PropertyTypeAttribute']);
-        Permission::create(['name' => 'Update:PropertyTypeAttribute']);
-        Permission::create(['name' => 'Delete:PropertyTypeAttribute']);
+        Permission::create(['name' => 'ViewAny:PropertyTypeAttribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'View:PropertyTypeAttribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Create:PropertyTypeAttribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:PropertyTypeAttribute', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:PropertyTypeAttribute', 'guard_name' => 'web']);
 
         // create permissions for region model
-        Permission::create(['name' => 'Create:Region']);
-        Permission::create(['name' => 'Update:Region']);
-        Permission::create(['name' => 'Delete:Region']);
-        Permission::create(['name' => 'Restore:Region']);
-        Permission::create(['name' => 'ForceDelete:Region']);
-        Permission::create(['name' => 'ForceDeleteAny:Region']);
-        Permission::create(['name' => 'RestoreAny:Region']);
+        Permission::create(['name' => 'Create:Region', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:Region', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:Region', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:Region', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:Region', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:Region', 'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:Region', 'guard_name' => 'web']);
 
         // -------------------------------------------------------------------------
         // agent role

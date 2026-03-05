@@ -18,13 +18,6 @@ class Property extends Model
     const LISTING_SALE = 'sale';
     const LISTING_RENT = 'rent';
 
-    const UNIT_M2   = 'm2';
-    const UNIT_FT2  = 'ft2';
-    const UNIT_ARE  = 'are';
-    const UNIT_HA   = 'ha';
-    const UNIT_ACRE = 'acre';
-    const UNIT_KM2  = 'km2';
-
     const STATUS_AVAILABLE = 'available';
     const STATUS_SOLD      = 'sold';
     const STATUS_RENTED    = 'rented';
@@ -33,8 +26,6 @@ class Property extends Model
         'property_type_id',
         'listing_type',
         'title',
-        'surface',
-        'surface_unit',
         'description',
         'attributes',
         'price',
@@ -52,7 +43,6 @@ class Property extends Model
 
     protected $casts = [
         'attributes'   => 'array',
-        'surface'      => 'decimal:2',
         'price'        => 'decimal:2',
         'is_published' => 'boolean',
         'published_at' => 'datetime',

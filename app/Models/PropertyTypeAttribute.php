@@ -19,12 +19,14 @@ class PropertyTypeAttribute extends Pivot
         'property_type_id',
         'attribute_id',
         'is_required',
+        'is_used_for_title',
         'order',
         'created_by',
     ];
 
     protected $casts = [
         'is_required' => 'boolean',
+        'is_used_for_title' => 'boolean',
         'order'       => 'integer',
     ];
 

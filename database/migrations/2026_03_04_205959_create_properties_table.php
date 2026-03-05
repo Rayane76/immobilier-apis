@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -31,6 +32,7 @@ return new class extends Migration
             $table->decimal('min_value', 15, 8)->nullable();
             $table->decimal('max_value', 15, 8)->nullable();
             $table->boolean('is_filterable')->default(false);
+            $table->string('property_title_label')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
@@ -42,6 +44,7 @@ return new class extends Migration
             $table->foreignId('attribute_id')->constrained()->cascadeOnDelete();
             $table->boolean('is_required')->default(false);
             $table->unsignedSmallInteger('order')->default(1);
+            $table->boolean('is_used_for_title')->default(false);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
@@ -49,9 +52,15 @@ return new class extends Migration
             $table->unique(['property_type_id', 'attribute_id']);
         });
 
+        DB::statement('
+            CREATE UNIQUE INDEX one_title_attribute_per_type
+            ON property_type_attributes (property_type_id)
+            WHERE is_used_for_title = true
+        ');
+
         Schema::create('regions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('parent_id')->constrained('regions')->cascadeOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('regions')->cascadeOnDelete();
             $table->string('name');
             $table->string('type');
             $table->unsignedSmallInteger('depth')->default(0);
@@ -70,8 +79,6 @@ return new class extends Migration
             $table->foreignId('property_type_id')->constrained()->restrictOnDelete();
             $table->enum('listing_type', ['sale', 'rent'])->default('sale');
             $table->string('title');
-            $table->decimal('surface', 12, 2);
-            $table->enum('surface_unit', ['m2', 'ft2', 'are', 'ha', 'acre', 'km2'])->default('m2');
             $table->text('description')->nullable();
             $table->jsonb('attributes')->nullable();
             $table->decimal('price', 15, 2)->nullable();

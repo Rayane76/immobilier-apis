@@ -24,6 +24,7 @@ class Attribute extends Model
         'title',
         'description',
         'type',
+        'property_title_label',
         'options',
         'min_value',
         'max_value',
