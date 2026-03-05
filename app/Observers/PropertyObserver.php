@@ -35,5 +35,9 @@ class PropertyObserver
             ]);
             $property->title = $property->generateTitle();
         }
+
+        if ($property->isDirty('is_published') && $property->is_published && !$property->published_at) {
+            $property->published_at = now();
+        }
     }
 }

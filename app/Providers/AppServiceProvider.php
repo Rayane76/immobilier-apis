@@ -5,6 +5,10 @@ namespace App\Providers;
 use App\Models\Attribute;
 use App\Models\Property;
 use App\Models\PropertyType;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\UserRepository;
+use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\RoleRepository;
 use App\Models\PropertyTypeAttribute;
 use App\Models\Region;
 use App\Models\User;
@@ -33,7 +37,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
     }
 
     /**
