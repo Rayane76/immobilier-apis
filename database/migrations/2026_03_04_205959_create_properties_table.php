@@ -51,7 +51,7 @@ return new class extends Migration
 
         Schema::create('regions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('parent_id')->nullable()->constrained('regions')->nullOnDelete();
+            $table->foreignId('parent_id')->constrained('regions')->cascadeOnDelete();
             $table->string('name');
             $table->string('type');
             $table->unsignedSmallInteger('depth')->default(0);

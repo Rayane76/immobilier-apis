@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
-use App\Models\User;
-use App\Policies\RolePolicy;
-use App\Policies\UserPolicy;
+use App\Models\PropertyType;
+use App\Models\PropertyTypeAttribute;
+use App\Models\Region;
+use App\Observers\PropertyTypeAttributeObserver;
+use App\Observers\PropertyTypeObserver;
+use App\Observers\RegionObserver;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,8 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::policy(User::class, UserPolicy::class);
-        Gate::policy(Role::class, RolePolicy::class);
+        Model::preventLazyLoading(! app()->isProduction());
+
+        PropertyType::observe(PropertyTypeObserver::class);
+        PropertyTypeAttribute::observe(PropertyTypeAttributeObserver::class);
+        Region::observe(RegionObserver::class);
 
         // Implicitly grant "Super-Admin" role all permission checks using can()
         Gate::before(function ($user, $ability) {

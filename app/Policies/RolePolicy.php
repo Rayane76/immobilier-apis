@@ -42,6 +42,16 @@ class RolePolicy
         return $user->can('ForceDelete:Role');
     }
 
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('ForceDeleteAny:Role');
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('RestoreAny:Role');
+    }
+
     /**
      * Determine whether the user can assign a permission to a given role.
      * Controls the role_has_permissions pivot.

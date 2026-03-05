@@ -26,8 +26,6 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'ForceDelete:User']);
         Permission::create(['name' => 'ForceDeleteAny:User']);
         Permission::create(['name' => 'RestoreAny:User']);
-        Permission::create(['name' => 'Replicate:User']);
-        Permission::create(['name' => 'Reorder:User']);
 
         //create permissions for role model
         Permission::create(['name' => 'ViewAny:Role']);
@@ -39,8 +37,6 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'ForceDelete:Role']);
         Permission::create(['name' => 'ForceDeleteAny:Role']);
         Permission::create(['name' => 'RestoreAny:Role']);
-        Permission::create(['name' => 'Replicate:Role']);
-        Permission::create(['name' => 'Reorder:Role']);
 
         // create permissions for permission model
         Permission::create(['name' => 'ViewAny:Permission']);
@@ -52,8 +48,6 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'ForceDelete:Permission']);
         Permission::create(['name' => 'ForceDeleteAny:Permission']);
         Permission::create(['name' => 'RestoreAny:Permission']);
-        Permission::create(['name' => 'Replicate:Permission']);
-        Permission::create(['name' => 'Reorder:Permission']);
 
         // create permissions for model_has_roles pivot (assigning roles to users)
         Permission::create(['name' => 'AssignRole:User']);
@@ -73,8 +67,6 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'ForceDelete:Property']);
         Permission::create(['name' => 'ForceDeleteAny:Property']);
         Permission::create(['name' => 'RestoreAny:Property']);
-        Permission::create(['name' => 'Replicate:Property']);
-        Permission::create(['name' => 'Reorder:Property']);
 
         // create permissions for image model
         Permission::create(['name' => 'ViewAny:Image']);
@@ -86,8 +78,6 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'ForceDelete:Image']);
         Permission::create(['name' => 'ForceDeleteAny:Image']);
         Permission::create(['name' => 'RestoreAny:Image']);
-        Permission::create(['name' => 'Replicate:Image']);
-        Permission::create(['name' => 'Reorder:Image']);
 
         $agent = Role::create(['name' => 'agent']);
         $agent->givePermissionTo('ViewAny:Property');

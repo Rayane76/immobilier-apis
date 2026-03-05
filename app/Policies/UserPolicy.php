@@ -41,6 +41,16 @@ class UserPolicy
         return $user->can('ForceDelete:User');
     }
 
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('ForceDeleteAny:User');
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('RestoreAny:User');
+    }
+
     /**
      * Determine whether the user can assign a role to a given user.
      * Controls the model_has_roles pivot.
