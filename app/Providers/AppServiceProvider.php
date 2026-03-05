@@ -8,6 +8,7 @@ use App\Models\PropertyType;
 use App\Models\PropertyTypeAttribute;
 use App\Models\Region;
 use App\Models\User;
+use App\Observers\PropertyObserver;
 use App\Observers\PropertyTypeAttributeObserver;
 use App\Observers\PropertyTypeObserver;
 use App\Observers\RegionObserver;
@@ -43,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(! app()->isProduction());
 
         // Observers
+        Property::observe(PropertyObserver::class);
         PropertyType::observe(PropertyTypeObserver::class);
         PropertyTypeAttribute::observe(PropertyTypeAttributeObserver::class);
         Region::observe(RegionObserver::class);

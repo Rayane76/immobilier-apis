@@ -64,6 +64,29 @@ class PropertyType extends Model
     }
 
     /**
+     * Get the attribute used for generating property titles for this type.
+     */
+    public function titleAttribute(): BelongsTo
+    {
+        return $this->belongsTo(Attribute::class, 'id', 'id')
+            ->whereIn('id', function ($query) {
+                $query->select('attribute_id')
+                    ->from('property_type_attributes')
+                    ->whereColumn('property_type_id', 'property_types.id')
+                    ->where('is_used_for_title', true);
+            });
+    }
+
+    /**
+     * Get the pivot record for the title attribute.
+     */
+    public function propertyTypeTitleAttribute(): HasMany
+    {
+        return $this->hasMany(PropertyTypeAttribute::class)
+            ->where('is_used_for_title', true);
+    }
+
+    /**
      * The user who created this property type.
      */
     public function createdBy(): BelongsTo

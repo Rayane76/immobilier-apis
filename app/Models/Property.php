@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Property extends Model
+class Property extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\PropertyFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, InteractsWithMedia;
 
     // -------------------------------------------------------------------------
     // Enum constants (mirror the DB enums for type-safe usage)
@@ -96,6 +98,61 @@ class Property extends Model
     public function deletedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Generate property title based on type, attributes and location.
+     */
+    public function generateTitle(): string
+    {
+        // Ensure necessary relationships are loaded to avoid N+1
+        if (!$this->relationLoaded('propertyType')) {
+            $this->load([
+                'propertyType.propertyTypeTitleAttribute.attribute',
+                'rootRegion',
+                'region'
+            ]);
+        }
+
+        $propertyType = $this->propertyType;
+        $titleParts = [];
+
+        // 1. Property Type Title
+        $titleParts[] = $propertyType->title;
+
+        // 2. Attribute value + label if configured
+        $titleAttributePivot = $propertyType->propertyTypeTitleAttribute->first();
+        if ($titleAttributePivot && $titleAttributePivot->attribute) {
+            $attribute = $titleAttributePivot->attribute;
+            $attributeKey = $attribute->title;
+
+            // Check if attribute exists in the JSON attributes
+            if (isset($this->attributes[$attributeKey])) {
+                $value = $this->attributes[$attributeKey];
+                $label = $attribute->property_title_label;
+
+                $titleParts[] = trim($value . ' ' . $label);
+            }
+        }
+
+        // 3. Location: à RootRegion - Region
+        $location = 'à ';
+        if ($this->rootRegion) {
+            $location .= $this->rootRegion->name;
+        }
+        if ($this->region) {
+            $location .= ($this->rootRegion ? ' - ' : '') . $this->region->name;
+        }
+
+        if (trim($location) !== 'à') {
+            $titleParts[] = $location;
+        }
+
+        return implode(' ', $titleParts);
     }
 
     // -------------------------------------------------------------------------
