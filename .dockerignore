@@ -1,0 +1,49 @@
+# ── Version control ───────────────────────────────────────────────────────────
+.git
+.gitattributes
+.gitignore
+
+# ── Dev tooling ───────────────────────────────────────────────────────────────
+.editorconfig
+.phpactor.json
+.idea
+.vscode
+.nova
+.zed
+.fleet
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules
+npm-debug.log
+package-lock.json
+
+# ── PHP dev ───────────────────────────────────────────────────────────────────
+.phpunit.result.cache
+.phpunit.cache
+
+# ── Laravel ───────────────────────────────────────────────────────────────────
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+public/build
+public/hot
+public/storage
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+docker-compose.yml
+docker-compose.override.yml
+
+# ── Env files (injected at runtime via --env-file) ───────────────────────────
+.env
+.env.*
+
+# ── Large binary – downloaded fresh during build ─────────────────────────────
+rr
+
+# ── Miscellaneous ─────────────────────────────────────────────────────────────
+*.log
+Homestead.json
+Homestead.yaml
+README.md

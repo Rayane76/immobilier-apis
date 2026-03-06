@@ -1,0 +1,30 @@
+# RoadRunner 2025.x configuration for Laravel Octane
+# This file is copied to .rr.yaml at the project root during Docker build.
+version: "3"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  # The worker process Octane spawns for each RoadRunner worker slot.
+  command: "php -d variables_order=EGPCS /var/www/html/artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8000"
+  relay: pipes
+
+http:
+  address: "0.0.0.0:8000"
+  middleware: ["gzip"]
+  uploads:
+    forbid: [".php", ".exe", ".bat"]
+  pool:
+    num_workers: 4
+    max_jobs: 500
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+logs:
+  mode: production
+  level: error
+  output: stdout
+  channels:
+    http:
+      mode: none

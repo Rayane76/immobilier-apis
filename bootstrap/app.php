@@ -10,7 +10,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Throwable;
 
 // ---------------------------------------------------------------------------
 // Unified API response schema
