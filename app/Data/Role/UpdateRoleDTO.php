@@ -7,7 +7,7 @@ use Spatie\LaravelData\Attributes\Validation\Sometimes;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 
-class UpdateRoleData extends Data
+class UpdateRoleDTO extends Data
 {
     public function __construct(
         #[Sometimes, Max(255)]

@@ -2,27 +2,33 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Data\Auth\LoginData;
-use App\Data\Auth\RegisterData;
+use App\Data\Auth\LoginDTO;
+use App\Data\Auth\RegisterDTO;
 use App\Http\Controllers\Controller;
 use App\Services\AuthService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * All authentication endpoints are public — no Sanctum token required.
+ *
+ * @group Authentication
+ * @unauthenticated
+ */
 class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService,
     ) {}
 
-    public function register(RegisterData $data): JsonResponse
+    public function register(RegisterDTO $data): JsonResponse
     {
         $response = $this->authService->register($data);
 
         return response()->json($response, 201);
     }
 
-    public function login(LoginData $data): JsonResponse
+    public function login(LoginDTO $data): JsonResponse
     {
         try {
             $response = $this->authService->login($data);

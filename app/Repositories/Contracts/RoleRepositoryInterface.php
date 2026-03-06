@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Data\Role\CreateRoleData;
-use App\Data\Role\UpdateRoleData;
+use App\Data\Role\CreateRoleDTO;
+use App\Data\Role\UpdateRoleDTO;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\Permission\Models\Role;
 
@@ -15,9 +15,9 @@ interface RoleRepositoryInterface
 
     public function findByName(string $name): ?Role;
 
-    public function create(CreateRoleData $data): Role;
+    public function create(CreateRoleDTO $data): Role;
 
-    public function update(Role $role, UpdateRoleData $data): Role;
+    public function update(Role $role, UpdateRoleDTO $data): Role;
 
     public function delete(Role $role): void;
 

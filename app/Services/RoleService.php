@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Data\Role\AssignPermissionData;
-use App\Data\Role\CreateRoleData;
-use App\Data\Role\RoleData;
-use App\Data\Role\UpdateRoleData;
+use App\Data\Role\AssignPermissionDTO;
+use App\Data\Role\CreateRoleDTO;
+use App\Data\Role\RoleDTO;
+use App\Data\Role\UpdateRoleDTO;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\Permission\Models\Role;
@@ -19,7 +19,7 @@ class RoleService
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return $this->roleRepository->paginate($perPage)
-            ->through(fn(Role $role) => RoleData::fromModel($role));
+            ->through(fn(Role $role) => RoleDTO::fromModel($role));
     }
 
     /**
@@ -34,9 +34,9 @@ class RoleService
         return $role;
     }
 
-    public function create(CreateRoleData $data): RoleData
+    public function create(CreateRoleDTO $data): RoleDTO
     {
-        return RoleData::fromModel(
+        return RoleDTO::fromModel(
             $this->roleRepository->create($data)
         );
     }
@@ -44,9 +44,9 @@ class RoleService
     /**
      * Model already fetched & authorized by the controller — no second lookup.
      */
-    public function updateModel(Role $role, UpdateRoleData $data): RoleData
+    public function updateModel(Role $role, UpdateRoleDTO $data): RoleDTO
     {
-        return RoleData::fromModel(
+        return RoleDTO::fromModel(
             $this->roleRepository->update($role, $data)
         );
     }
@@ -62,9 +62,9 @@ class RoleService
     /**
      * Model already fetched & authorized by the controller — no second lookup.
      */
-    public function assignPermission(Role $role, AssignPermissionData $data): RoleData
+    public function assignPermission(Role $role, AssignPermissionDTO $data): RoleDTO
     {
-        return RoleData::fromModel(
+        return RoleDTO::fromModel(
             $this->roleRepository->assignPermission($role, $data->permission)
         );
     }
@@ -72,9 +72,9 @@ class RoleService
     /**
      * Model already fetched & authorized by the controller — no second lookup.
      */
-    public function revokePermission(Role $role, AssignPermissionData $data): RoleData
+    public function revokePermission(Role $role, AssignPermissionDTO $data): RoleDTO
     {
-        return RoleData::fromModel(
+        return RoleDTO::fromModel(
             $this->roleRepository->revokePermission($role, $data->permission)
         );
     }

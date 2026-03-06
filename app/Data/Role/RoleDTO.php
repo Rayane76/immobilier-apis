@@ -5,7 +5,7 @@ namespace App\Data\Role;
 use Spatie\Permission\Models\Role;
 use Spatie\LaravelData\Data;
 
-class RoleData extends Data
+class RoleDTO extends Data
 {
     public function __construct(
         public readonly int $id,

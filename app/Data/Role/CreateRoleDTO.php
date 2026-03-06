@@ -7,7 +7,7 @@ use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Attributes\Validation\Unique;
 use Spatie\LaravelData\Data;
 
-class CreateRoleData extends Data
+class CreateRoleDTO extends Data
 {
     public function __construct(
         #[Required, Max(255), Unique('roles', 'name')]

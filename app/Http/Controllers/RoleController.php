@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\Role\AssignPermissionData;
-use App\Data\Role\CreateRoleData;
-use App\Data\Role\RoleData;
-use App\Data\Role\UpdateRoleData;
+use App\Data\Role\AssignPermissionDTO;
+use App\Data\Role\CreateRoleDTO;
+use App\Data\Role\RoleDTO;
+use App\Data\Role\UpdateRoleDTO;
 use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Spatie\Permission\Models\Role;
 
+/**
+ * @group Roles
+ *
+ * Manage roles and their associated permissions. All endpoints require authentication.
+ */
 class RoleController extends Controller
 {
     public function __construct(
@@ -29,17 +34,17 @@ class RoleController extends Controller
 
         $this->authorize('view', $role);
 
-        return response()->json(RoleData::fromModel($role));
+        return response()->json(RoleDTO::fromModel($role));
     }
 
-    public function store(CreateRoleData $data): JsonResponse
+    public function store(CreateRoleDTO $data): JsonResponse
     {
         $this->authorize('create', Role::class);
 
         return response()->json($this->roleService->create($data), 201);
     }
 
-    public function update(UpdateRoleData $data, int $id): JsonResponse
+    public function update(UpdateRoleDTO $data, int $id): JsonResponse
     {
         $role = $this->roleService->findModelOrFail($id);
 
@@ -59,7 +64,7 @@ class RoleController extends Controller
         return response()->json(null, 204);
     }
 
-    public function assignPermission(AssignPermissionData $data, int $id): JsonResponse
+    public function assignPermission(AssignPermissionDTO $data, int $id): JsonResponse
     {
         $role = $this->roleService->findModelOrFail($id);
 
@@ -68,7 +73,7 @@ class RoleController extends Controller
         return response()->json($this->roleService->assignPermission($role, $data));
     }
 
-    public function revokePermission(AssignPermissionData $data, int $id): JsonResponse
+    public function revokePermission(AssignPermissionDTO $data, int $id): JsonResponse
     {
         $role = $this->roleService->findModelOrFail($id);
 

@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\User\AssignRoleData;
-use App\Data\User\CreateUserData;
-use App\Data\User\UpdateUserData;
-use App\Data\UserData;
+use App\Data\User\AssignRoleDTO;
+use App\Data\User\CreateUserDTO;
+use App\Data\User\UpdateUserDTO;
+use App\Data\UserDTO;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * @group Users
+ *
+ * Manage users, their roles, and profile data. All endpoints require authentication.
+ */
 class UserController extends Controller
 {
     public function __construct(
@@ -29,17 +34,17 @@ class UserController extends Controller
 
         $this->authorize('view', $user);
 
-        return response()->json(UserData::fromModel($user));
+        return response()->json(UserDTO::fromModel($user));
     }
 
-    public function store(CreateUserData $data): JsonResponse
+    public function store(CreateUserDTO $data): JsonResponse
     {
         $this->authorize('create', User::class);
 
         return response()->json($this->userService->create($data), 201);
     }
 
-    public function update(UpdateUserData $data, int $id): JsonResponse
+    public function update(UpdateUserDTO $data, int $id): JsonResponse
     {
         $user = $this->userService->findModelOrFail($id);
 
@@ -59,7 +64,7 @@ class UserController extends Controller
         return response()->json(null, 204);
     }
 
-    public function assignRole(AssignRoleData $data, int $id): JsonResponse
+    public function assignRole(AssignRoleDTO $data, int $id): JsonResponse
     {
         $user = $this->userService->findModelOrFail($id);
 
@@ -68,7 +73,7 @@ class UserController extends Controller
         return response()->json($this->userService->assignRole($user, $data));
     }
 
-    public function revokeRole(AssignRoleData $data, int $id): JsonResponse
+    public function revokeRole(AssignRoleDTO $data, int $id): JsonResponse
     {
         $user = $this->userService->findModelOrFail($id);
 

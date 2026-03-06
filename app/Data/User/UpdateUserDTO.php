@@ -10,7 +10,7 @@ use Spatie\LaravelData\Attributes\Validation\Sometimes;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 
-class UpdateUserData extends Data
+class UpdateUserDTO extends Data
 {
     public function __construct(
         #[Sometimes, Max(255)]

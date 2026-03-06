@@ -13,7 +13,7 @@ class PropertyPolicy
     // Super-Admin bypasses all methods via Gate::before in AppServiceProvider.
 
     /**
-     * Anyone — including unauthenticated guests — can browse the listing.
+     * Anyone — including unauthenticated guests — can browse published listings.
      */
     public function viewAny(?User $user): bool
     {
@@ -21,11 +21,36 @@ class PropertyPolicy
     }
 
     /**
-     * Anyone — including unauthenticated guests — can view a single property.
+     * Anyone — including unauthenticated guests — can view a non-deleted property.
+     * Deleted properties are gated separately via viewDeleted().
      */
     public function view(?User $user, Property $property): bool
     {
         return true;
+    }
+
+    /**
+     * View a single soft-deleted property.
+     *
+     * Agents may only view their own deleted listings so they can decide
+     * whether to restore them. Super-Admin bypasses this via Gate::before.
+     */
+    public function viewDeleted(User $user, Property $property): bool
+    {
+        return $user->can('ViewDeleted:Property')
+            && $property->created_by === $user->id;
+    }
+
+    /**
+     * Browse the trashed listing (index with ?trashed=true).
+     *
+     * Both agents and Super-Admin pass this check. The repository then scopes
+     * the results to created_by = user->id for agents (hasDirectPermission),
+     * while Super-Admin (granted via Gate::before, not directly) sees everything.
+     */
+    public function viewAnyDeleted(User $user): bool
+    {
+        return $user->can('ViewAnyDeleted:Property');
     }
 
     public function create(User $user): bool

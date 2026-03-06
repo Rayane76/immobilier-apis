@@ -9,6 +9,8 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\UserRepository;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\RoleRepository;
+use App\Repositories\Contracts\PropertyRepositoryInterface;
+use App\Repositories\PropertyRepository;
 use App\Models\PropertyTypeAttribute;
 use App\Models\Region;
 use App\Models\User;
@@ -40,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
+        $this->app->bind(PropertyRepositoryInterface::class, PropertyRepository::class);
     }
 
     /**

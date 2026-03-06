@@ -49,8 +49,8 @@ ROLE_COUNT=$(php artisan tinker --execute="echo \DB::table('roles')->count();" 2
 
 if [ "${ROLE_COUNT}" = "0" ] || [ -z "${ROLE_COUNT}" ]; then
     echo "[entrypoint] Fresh database — running seeders..."
-    php artisan db:seed --force
     php artisan db:seed --class=PermissionSeeder --force
+    php artisan db:seed --force
 
     echo "[entrypoint] Syncing Meilisearch index settings..."
     php artisan scout:sync-index-settings
@@ -77,6 +77,9 @@ php artisan event:cache
 
 echo "[entrypoint] Linking storage..."
 php artisan storage:link --force 2>/dev/null || true
+
+echo "[entrypoint] Generating Scribe API documentation..."
+php artisan scribe:generate --force 2>/dev/null || echo "[entrypoint] WARNING: scribe:generate failed — docs may be stale."
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Hand off to supervisord (manages Octane + queue workers)

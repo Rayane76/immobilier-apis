@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Data\Auth\RegisterData;
-use App\Data\User\CreateUserData;
-use App\Data\User\UpdateUserData;
+use App\Data\Auth\RegisterDTO;
+use App\Data\User\CreateUserDTO;
+use App\Data\User\UpdateUserDTO;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,7 +15,7 @@ class UserRepository implements UserRepositoryInterface
 {
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        // Eager load roles to prevent N+1 on getRoleNames() in UserData::fromModel()
+        // Eager load roles to prevent N+1 on getRoleNames() in UserDTO::fromModel()
         return User::with('roles')->paginate($perPage);
     }
 
@@ -29,7 +29,7 @@ class UserRepository implements UserRepositoryInterface
         return User::with('roles')->where('email', $email)->first();
     }
 
-    public function create(RegisterData|CreateUserData $data): User
+    public function create(RegisterDTO|CreateUserDTO $data): User
     {
         return User::create([
             'name'     => $data->name,
@@ -38,7 +38,7 @@ class UserRepository implements UserRepositoryInterface
         ]);
     }
 
-    public function update(User $user, UpdateUserData $data): User
+    public function update(User $user, UpdateUserDTO $data): User
     {
         $payload = collect($data->toArray())
             ->reject(fn($v) => $v instanceof Optional)

@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Data\User;
+namespace App\Data\Role;
 
 use Spatie\LaravelData\Attributes\Validation\Exists;
 use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Data;
 
-class AssignRoleData extends Data
+class AssignPermissionDTO extends Data
 {
     public function __construct(
-        #[Required, Exists('roles', 'name')]
-        public readonly string $role,
+        #[Required, Exists('permissions', 'name')]
+        public readonly string $permission,
     ) {}
 }

@@ -23,7 +23,8 @@
         "spatie/laravel-medialibrary": "*",
         "spatie/laravel-permission": "*",
         "spiral/roadrunner-cli": "^2.6.0",
-        "spiral/roadrunner-http": "^3.3.0"
+        "spiral/roadrunner-http": "^3.3.0",
+        "knuckleswtf/scribe": "*"
     },
     "require-dev": {
         "laravel/boost": "^2.0",

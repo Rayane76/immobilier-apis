@@ -40,7 +40,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Handle CORS before any routing so preflight OPTIONS requests
+        // are answered immediately without hitting auth or policy layers.
+        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 

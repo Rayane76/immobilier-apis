@@ -24,7 +24,12 @@ class PropertySeeder extends Seeder
         $leafRegions = $allRegions->whereIn('type', ['commune', 'city'])->values();
 
         $propertyTypes = PropertyType::with('propertyTypeAttributes.attribute')->get();
-        $users = User::pluck('id');
+        // Use only users with 'agent' or 'Super-Admin' roles
+        $users = User::role(['agent', 'Super-Admin'])->pluck('id');
+
+        if ($users->isEmpty()) {
+            $users = User::pluck('id');
+        }
 
         if ($users->isEmpty()) {
             $users = collect([User::factory()->create()->id]);
@@ -128,6 +133,53 @@ class PropertySeeder extends Seeder
 
             DB::table('properties')->insert($batch);
             $this->command->getOutput()->progressAdvance($batchSize);
+        }
+
+        $this->command->getOutput()->progressFinish();
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Phase 2: attach seed images to a representative sample.
+        // Images are read from database/seeders/images/ and attached with
+        // preservingOriginal() so the same source files can be reused across
+        // multiple properties without being moved/deleted by MediaLibrary.
+        // ─────────────────────────────────────────────────────────────────────
+        $seedImageDir = database_path('seeders/images');
+        $seedImages   = glob($seedImageDir . '/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
+
+        if (empty($seedImages)) {
+            $this->command->getOutput()->writeln('');
+            $this->command->getOutput()->writeln('<comment>[PropertySeeder] No seed images found in database/seeders/images/ — skipping media attachment.</comment>');
+            return;
+        }
+
+        $sampleSize = 500;
+        $sampleIds  = Property::inRandomOrder()->limit($sampleSize)->pluck('id');
+
+        $this->command->getOutput()->writeln('');
+        $this->command->getOutput()->writeln("[PropertySeeder] Attaching seed images to {$sampleIds->count()} sample properties...");
+        $this->command->getOutput()->progressStart($sampleIds->count());
+
+        foreach ($sampleIds as $id) {
+            $property = Property::find($id);
+
+            // Pick a random seed image for the cover
+            $mainSrc = $seedImages[array_rand($seedImages)];
+            $property->addMedia($mainSrc)
+                ->preservingOriginal()
+                ->usingFileName('main_' . $id . '.' . pathinfo($mainSrc, PATHINFO_EXTENSION))
+                ->toMediaCollection('main_image');
+
+            // 1–4 random gallery images
+            $galleryCount = rand(1, 4);
+            for ($k = 0; $k < $galleryCount; $k++) {
+                $gallerySrc = $seedImages[array_rand($seedImages)];
+                $property->addMedia($gallerySrc)
+                    ->preservingOriginal()
+                    ->usingFileName('gallery_' . $id . '_' . $k . '.' . pathinfo($gallerySrc, PATHINFO_EXTENSION))
+                    ->toMediaCollection('images');
+            }
+
+            $this->command->getOutput()->progressAdvance();
         }
 
         $this->command->getOutput()->progressFinish();

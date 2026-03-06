@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -58,13 +59,17 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'RevokePermission:Role', 'guard_name' => 'web']);
 
         // create permissions for property model
-        Permission::create(['name' => 'Create:Property', 'guard_name' => 'web']);
-        Permission::create(['name' => 'Update:Property', 'guard_name' => 'web']);
-        Permission::create(['name' => 'Delete:Property', 'guard_name' => 'web']);
-        Permission::create(['name' => 'Restore:Property', 'guard_name' => 'web']);
-        Permission::create(['name' => 'ForceDelete:Property', 'guard_name' => 'web']);
-        Permission::create(['name' => 'ForceDeleteAny:Property', 'guard_name' => 'web']);
-        Permission::create(['name' => 'RestoreAny:Property', 'guard_name' => 'web']);
+        Permission::create(['name' => 'Create:Property',           'guard_name' => 'web']);
+        Permission::create(['name' => 'Update:Property',           'guard_name' => 'web']);
+        Permission::create(['name' => 'Delete:Property',           'guard_name' => 'web']);
+        Permission::create(['name' => 'Restore:Property',          'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDelete:Property',      'guard_name' => 'web']);
+        Permission::create(['name' => 'ForceDeleteAny:Property',   'guard_name' => 'web']);
+        Permission::create(['name' => 'RestoreAny:Property',       'guard_name' => 'web']);
+        // ViewDeleted:Property  — view a single soft-deleted property (own record for agents)
+        // ViewAnyDeleted:Property — browse the trashed listing (Super-Admin only in practice)
+        Permission::create(['name' => 'ViewDeleted:Property',      'guard_name' => 'web']);
+        Permission::create(['name' => 'ViewAnyDeleted:Property',   'guard_name' => 'web']);
 
         // create permissions for image model
         Permission::create(['name' => 'ViewAny:Image', 'guard_name' => 'web']);
@@ -127,6 +132,11 @@ class PermissionSeeder extends Seeder
             'Delete:Property',
             'Restore:Property',
             'ForceDelete:Property',
+            // Agents can view their own soft-deleted listings (e.g. to restore them)
+            'ViewDeleted:Property',
+            // Agents can browse their own deleted listings; the repository scopes
+            // the query to created_by = user->id for non-Super-Admin callers.
+            'ViewAnyDeleted:Property',
 
             // Image
             'ViewAny:Image',
@@ -178,18 +188,21 @@ class PermissionSeeder extends Seeder
         $user = \App\Models\User::factory()->create([
             'name' => 'Super-Admin User',
             'email' => 'super-admin@example.com',
+            'password' => Hash::make('admin-password'),
         ]);
         $user->assignRole($superAdmin);
 
         $user = \App\Models\User::factory()->create([
             'name' => 'Agent User',
             'email' => 'agent@example.com',
+            'password' => Hash::make('agent-password'),
         ]);
         $user->assignRole($agent);
 
         $user = \App\Models\User::factory()->create([
             'name' => 'Visiteur User',
             'email' => 'visiteur@example.com',
+            'password' => Hash::make('visiteur-password'),
         ]);
         $user->assignRole($visiteur);
     }

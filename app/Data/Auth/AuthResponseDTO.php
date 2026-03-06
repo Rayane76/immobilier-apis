@@ -2,14 +2,14 @@
 
 namespace App\Data\Auth;
 
-use App\Data\UserData;
+use App\Data\UserDTO;
 use Spatie\LaravelData\Data;
 
-class AuthResponseData extends Data
+class AuthResponseDTO extends Data
 {
     public function __construct(
         public readonly string $token,
-        public readonly UserData $user,
+        public readonly UserDTO $user,
         /** @var string[] */
         public readonly array $roles,
         /** @var string[] */

@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Data\Auth\AuthResponseData;
-use App\Data\Auth\LoginData;
-use App\Data\Auth\RegisterData;
-use App\Data\UserData;
+use App\Data\Auth\AuthResponseDTO;
+use App\Data\Auth\LoginDTO;
+use App\Data\Auth\RegisterDTO;
+use App\Data\UserDTO;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Auth\AuthenticationException;
@@ -20,7 +20,7 @@ class AuthService
     /**
      * @throws AuthenticationException
      */
-    public function login(LoginData $data): AuthResponseData
+    public function login(LoginDTO $data): AuthResponseDTO
     {
         $user = $this->userRepository->findByEmail($data->email);
 
@@ -31,7 +31,7 @@ class AuthService
         return $this->buildAuthResponse($user);
     }
 
-    public function register(RegisterData $data): AuthResponseData
+    public function register(RegisterDTO $data): AuthResponseDTO
     {
         $user = $this->userRepository->create($data);
 
@@ -46,16 +46,16 @@ class AuthService
      * Permissions are returned in the payload for frontend UI gating only.
      * The backend always re-validates via Policies — this is the source of truth.
      */
-    private function buildAuthResponse(User $user): AuthResponseData
+    private function buildAuthResponse(User $user): AuthResponseDTO
     {
         // Revoke previous tokens to enforce single-session (remove if multi-device is needed)
         $user->tokens()->delete();
 
         $token = $user->createToken('api')->plainTextToken;
 
-        return new AuthResponseData(
+        return new AuthResponseDTO(
             token: $token,
-            user: UserData::fromModel($user),
+            user: UserDTO::fromModel($user),
             roles: $user->getRoleNames()->toArray(),
             permissions: $user->getAllPermissions()->pluck('name')->toArray(),
         );

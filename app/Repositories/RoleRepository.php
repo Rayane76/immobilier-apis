@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Data\Role\CreateRoleData;
-use App\Data\Role\UpdateRoleData;
+use App\Data\Role\CreateRoleDTO;
+use App\Data\Role\UpdateRoleDTO;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\LaravelData\Optional;
@@ -26,14 +26,14 @@ class RoleRepository implements RoleRepositoryInterface
         return Role::with('permissions')->where('name', $name)->first();
     }
 
-    public function create(CreateRoleData $data): Role
+    public function create(CreateRoleDTO $data): Role
     {
         $role = Role::create(['name' => $data->name, 'guard_name' => 'web']);
 
         return $role->load('permissions');
     }
 
-    public function update(Role $role, UpdateRoleData $data): Role
+    public function update(Role $role, UpdateRoleDTO $data): Role
     {
         $payload = collect($data->toArray())
             ->reject(fn($v) => $v instanceof Optional)

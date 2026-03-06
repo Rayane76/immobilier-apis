@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Data\User\AssignRoleData;
-use App\Data\User\CreateUserData;
-use App\Data\User\UpdateUserData;
-use App\Data\UserData;
+use App\Data\User\AssignRoleDTO;
+use App\Data\User\CreateUserDTO;
+use App\Data\User\UpdateUserDTO;
+use App\Data\UserDTO;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -19,7 +19,7 @@ class UserService
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return $this->userRepository->paginate($perPage)
-            ->through(fn(User $user) => UserData::fromModel($user));
+            ->through(fn(User $user) => UserDTO::fromModel($user));
     }
 
     /**
@@ -34,21 +34,21 @@ class UserService
         return $user;
     }
 
-    public function create(CreateUserData $data): UserData
+    public function create(CreateUserDTO $data): UserDTO
     {
         $user = $this->userRepository->create($data);
 
         $user->assignRole('visiteur');
 
-        return UserData::fromModel($user->load('roles'));
+        return UserDTO::fromModel($user->load('roles'));
     }
 
     /**
      * Model already fetched & authorized by the controller — no second lookup.
      */
-    public function updateModel(User $user, UpdateUserData $data): UserData
+    public function updateModel(User $user, UpdateUserDTO $data): UserDTO
     {
-        return UserData::fromModel(
+        return UserDTO::fromModel(
             $this->userRepository->update($user, $data)
         );
     }
@@ -64,9 +64,9 @@ class UserService
     /**
      * Model already fetched & authorized by the controller — no second lookup.
      */
-    public function assignRole(User $user, AssignRoleData $data): UserData
+    public function assignRole(User $user, AssignRoleDTO $data): UserDTO
     {
-        return UserData::fromModel(
+        return UserDTO::fromModel(
             $this->userRepository->assignRole($user, $data->role)
         );
     }
@@ -74,9 +74,9 @@ class UserService
     /**
      * Model already fetched & authorized by the controller — no second lookup.
      */
-    public function revokeRole(User $user, AssignRoleData $data): UserData
+    public function revokeRole(User $user, AssignRoleDTO $data): UserDTO
     {
-        return UserData::fromModel(
+        return UserDTO::fromModel(
             $this->userRepository->revokeRole($user, $data->role)
         );
     }
