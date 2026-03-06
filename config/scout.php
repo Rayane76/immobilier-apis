@@ -140,9 +140,54 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
-            // ],
+            'properties' => [
+                // Full-text search targets
+                'searchableAttributes' => [
+                    'title',
+                    'description',
+                    'address',
+                    'property_type',
+                    'region',
+                    'root_region',
+                    'country_region',
+                ],
+
+                // Available for $filter= in search queries.
+                // NOTE: dynamic attr_* keys from the Attribute table are NOT listed here.
+                // They are pushed to Meilisearch at runtime by `scout:sync-property-filters`,
+                // which runs on every boot and auto-fires via AttributeObserver whenever an
+                // admin creates, renames, or deletes an Attribute.
+                'filterableAttributes' => [
+                    'listing_type',
+                    'status',
+                    'is_published',
+                    'price',
+                    'property_type_id',
+                    'property_type',
+                    'region_id',
+                    'root_region_id',
+                    'country_region_id',
+                ],
+
+                // Available for $sort= in search queries
+                'sortableAttributes' => [
+                    'price',
+                    'published_at',
+                    'available_at',
+                    'created_at',
+                ],
+
+                // Typo tolerance tuning for real-estate terms
+                'typoTolerance' => [
+                    'enabled' => true,
+                    'disableOnAttributes' => ['price', 'status', 'listing_type'],
+                ],
+
+                // Pagination cap
+                'pagination' => [
+                    'maxTotalHits' => 50000,
+                ],
+            ],
         ],
     ],
 

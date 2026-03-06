@@ -12,6 +12,7 @@ use App\Repositories\RoleRepository;
 use App\Models\PropertyTypeAttribute;
 use App\Models\Region;
 use App\Models\User;
+use App\Observers\AttributeObserver;
 use App\Observers\PropertyObserver;
 use App\Observers\PropertyTypeAttributeObserver;
 use App\Observers\PropertyTypeObserver;
@@ -49,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(! app()->isProduction());
 
         // Observers
+        Attribute::observe(AttributeObserver::class);
         Property::observe(PropertyObserver::class);
         PropertyType::observe(PropertyTypeObserver::class);
         PropertyTypeAttribute::observe(PropertyTypeAttributeObserver::class);

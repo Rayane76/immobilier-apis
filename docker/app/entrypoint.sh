@@ -51,8 +51,23 @@ if [ "${ROLE_COUNT}" = "0" ] || [ -z "${ROLE_COUNT}" ]; then
     echo "[entrypoint] Fresh database — running seeders..."
     php artisan db:seed --force
     php artisan db:seed --class=PermissionSeeder --force
+
+    echo "[entrypoint] Syncing Meilisearch index settings..."
+    php artisan scout:sync-index-settings
+
+    echo "[entrypoint] Syncing dynamic property attribute filters to Meilisearch..."
+    php artisan scout:sync-property-filters
+
+    echo "[entrypoint] Importing properties into Meilisearch (this may take a moment)..."
+    php artisan scout:import "App\\Models\\Property"
 else
-    echo "[entrypoint] Database already seeded (roles: ${ROLE_COUNT}) — skipping."
+    echo "[entrypoint] Database already seeded (roles: ${ROLE_COUNT}) — skipping seed."
+
+    echo "[entrypoint] Syncing Meilisearch index settings..."
+    php artisan scout:sync-index-settings
+
+    echo "[entrypoint] Syncing dynamic property attribute filters to Meilisearch..."
+    php artisan scout:sync-property-filters
 fi
 
 echo "[entrypoint] Caching config / routes / events..."

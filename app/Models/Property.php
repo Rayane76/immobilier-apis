@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Scout\Searchable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Property extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\PropertyFactory> */
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, SoftDeletes, InteractsWithMedia, Searchable;
 
     // -------------------------------------------------------------------------
     // Enum constants (mirror the DB enums for type-safe usage)
@@ -50,6 +52,18 @@ class Property extends Model implements HasMedia
         'published_at' => 'datetime',
         'available_at' => 'datetime',
     ];
+
+    // -------------------------------------------------------------------------
+    // Media Collections
+    // -------------------------------------------------------------------------
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('main_image')
+            ->singleFile();
+
+        $this->addMediaCollection('images');
+    }
 
     // -------------------------------------------------------------------------
     // Relationships
@@ -122,7 +136,7 @@ class Property extends Model implements HasMedia
         $titleParts = [];
 
         // 1. Property Type Title
-        $titleParts[] = $propertyType->title;
+        $titleParts[] = ucfirst($propertyType->title);
 
         // 2. Attribute value + label if configured
         $titleAttributePivot = $propertyType->propertyTypeTitleAttribute->first();
@@ -153,6 +167,112 @@ class Property extends Model implements HasMedia
         }
 
         return implode(' ', $titleParts);
+    }
+
+    // -------------------------------------------------------------------------
+    // Scout / Meilisearch
+    // -------------------------------------------------------------------------
+
+    /**
+     * The Meilisearch index name for this model.
+     */
+    public function searchableAs(): string
+    {
+        return 'properties';
+    }
+
+    /**
+     * Eager-load relationships when mass-importing via scout:import.
+     */
+    public function makeAllSearchableUsing(Builder $query): Builder
+    {
+        return $query->with(['propertyType', 'region', 'rootRegion', 'countryRegion']);
+    }
+
+    /**
+     * Build the searchable / filterable document sent to Meilisearch.
+     *
+     * Dynamic attributes are spread as flat top-level keys (attr_* prefix) rather
+     * than nested under an "attributes" object. Meilisearch builds its inverted
+     * index on scalar leaf values; nested objects require additional traversal on
+     * every filter evaluation, so flat fields are significantly faster under heavy
+     * attribute filtering (e.g. attr_surface > 100 AND attr_nombre_de_pieces = 3).
+     */
+    public function toSearchableArray(): array
+    {
+        $doc = [
+            'id'                => $this->id,
+            'title'             => $this->title,
+            'description'       => $this->description,
+            'listing_type'      => $this->listing_type,
+            'status'            => $this->status,
+            'price'             => (float) $this->price,
+            'address'           => $this->address,
+            'is_published'      => $this->is_published,
+
+            // Relational fields
+            'property_type_id'  => $this->property_type_id,
+            'property_type'     => $this->propertyType?->title,
+            'region_id'         => $this->region_id,
+            'region'            => $this->region?->name,
+            'root_region_id'    => $this->root_region_id,
+            'root_region'       => $this->rootRegion?->name,
+            'country_region_id' => $this->country_region_id,
+            'country_region'    => $this->countryRegion?->name,
+
+            // Timestamps as Unix integers for sorting
+            'published_at'      => $this->published_at?->timestamp,
+            'available_at'      => $this->available_at?->timestamp,
+            'created_at'        => $this->created_at?->timestamp,
+        ];
+
+        // Spread each dynamic attribute as a flat top-level field.
+        // Keys are ASCII-normalized and prefixed with "attr_" to:
+        //   1. Avoid collisions with the fixed fields above
+        //   2. Produce clean, predictable Meilisearch filter expressions
+        //   3. Allow Meilisearch to build a direct inverted index per attribute
+        foreach ($this->attributes ?? [] as $key => $value) {
+            $doc[$this->normalizeAttributeKey($key)] = $value;
+        }
+
+        return $doc;
+    }
+
+    /**
+     * Normalize a dynamic attribute key to a safe, ASCII Meilisearch field name.
+     *
+     * Examples:
+     *   "nombre de pièces"  → "attr_nombre_de_pieces"
+     *   "Parking sous sol"  → "attr_parking_sous_sol"
+     *   "type de terrain"   → "attr_type_de_terrain"
+     */
+    public static function normalizeAttributeKey(string $key): string
+    {
+        $key = mb_strtolower($key);
+        $key = strtr($key, [
+            'é' => 'e',
+            'è' => 'e',
+            'ê' => 'e',
+            'ë' => 'e',
+            'à' => 'a',
+            'â' => 'a',
+            'á' => 'a',
+            'î' => 'i',
+            'ï' => 'i',
+            'í' => 'i',
+            'ô' => 'o',
+            'ö' => 'o',
+            'ó' => 'o',
+            'ù' => 'u',
+            'û' => 'u',
+            'ü' => 'u',
+            'ú' => 'u',
+            'ç' => 'c',
+            'ñ' => 'n',
+        ]);
+        $key = preg_replace('/[^a-z0-9]+/', '_', $key);
+
+        return 'attr_' . trim($key, '_');
     }
 
     // -------------------------------------------------------------------------
