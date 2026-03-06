@@ -17,6 +17,7 @@ class SyncPropertyMeilisearchFilters extends Command
      * Dynamic attr_* keys from the Attribute table are appended at runtime.
      */
     private const STATIC_FILTERABLE = [
+        '__soft_deleted',   // required by Scout soft_delete=true
         'listing_type',
         'status',
         'is_published',
@@ -26,6 +27,16 @@ class SyncPropertyMeilisearchFilters extends Command
         'region_id',
         'root_region_id',
         'country_region_id',
+        'created_by',       // ownership scoping for agents (unpublished / trashed)
+        'deleted_at',       // filtering / sorting trashed results
+    ];
+
+    private const STATIC_SORTABLE = [
+        'price',
+        'published_at',
+        'available_at',
+        'created_at',
+        'deleted_at',
     ];
 
     public function handle(): int
@@ -51,9 +62,9 @@ class SyncPropertyMeilisearchFilters extends Command
         $filterableAttributes = array_merge(self::STATIC_FILTERABLE, $dynamicKeys);
 
         try {
-            $meilisearch
-                ->index('properties')
-                ->updateFilterableAttributes($filterableAttributes);
+            $index = $meilisearch->index('properties');
+            $index->updateFilterableAttributes($filterableAttributes);
+            $index->updateSortableAttributes(self::STATIC_SORTABLE);
         } catch (\Throwable $e) {
             $this->error('[scout:sync-property-filters] Failed: ' . $e->getMessage());
             return self::FAILURE;

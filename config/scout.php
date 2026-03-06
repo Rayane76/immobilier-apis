@@ -84,7 +84,7 @@ return [
     |
     */
 
-    'soft_delete' => false,
+    'soft_delete' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -158,6 +158,7 @@ return [
                 // which runs on every boot and auto-fires via AttributeObserver whenever an
                 // admin creates, renames, or deletes an Attribute.
                 'filterableAttributes' => [
+                    '__soft_deleted',   // required by Scout soft_delete=true
                     'listing_type',
                     'status',
                     'is_published',
@@ -167,6 +168,8 @@ return [
                     'region_id',
                     'root_region_id',
                     'country_region_id',
+                    'created_by',       // ownership scoping for agents
+                    'deleted_at',       // sorting trashed results
                 ],
 
                 // Available for $sort= in search queries
@@ -175,6 +178,7 @@ return [
                     'published_at',
                     'available_at',
                     'created_at',
+                    'deleted_at',       // sort trashed results by deletion date
                 ],
 
                 // Typo tolerance tuning for real-estate terms

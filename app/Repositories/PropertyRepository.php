@@ -23,32 +23,29 @@ class PropertyRepository implements PropertyRepositoryInterface
 
     public function paginate(PropertyFilterDTO $filter, ?int $ownedBy = null): LengthAwarePaginator
     {
-        // Scout removes soft-deleted records from the Meilisearch index, so
-        // browsing trashed properties must go through Eloquent directly.
-        if ($filter->trashed === true) {
-            return $this->browseTrashedWithEloquent($filter, $ownedBy);
-        }
+        // All three cases (normal, trashed, unpublished) go through Meilisearch.
+        //
+        // Trashed:     scout.soft_delete=true keeps soft-deleted docs in the index
+        //              with __soft_deleted=1; force-delete removes them entirely.
+        //              We filter __soft_deleted=1 to browse trashed, __soft_deleted=0
+        //              for everything else.
+        //
+        // Unpublished: created_by is indexed so agents can be scoped to their own
+        //              unpublished listings via a created_by = {id} filter, while
+        //              Super-Admin ($ownedBy = null) sees all.
+        //
+        // Do NOT use ->query() on the Scout builder: when a queryCallback is set,
+        // Scout's getTotalCount() fires a second Meilisearch request to fetch *all*
+        // matching IDs so it can re-count via Eloquent — with hundreds of documents
+        // that second request times out and kills the RoadRunner worker.
+        // Instead we call paginate() without ->query(), letting Scout hydrate models
+        // via a single whereIn, then lazy-load relations on the hydrated collection.
+        $meiliFilters = $this->buildMeilisearchFilters($filter, $ownedBy);
+        $sort = $filter->trashed === true ? ['deleted_at:desc'] : ['created_at:desc'];
 
-        // Browsing unpublished listings requires ownership scoping for agents,
-        // so we bypass Meilisearch and use Eloquent directly.
-        if ($filter->is_published === false) {
-            return $this->browseUnpublishedWithEloquent($filter, $ownedBy);
-        }
-
-        $meiliFilters = $this->buildMeilisearchFilters($filter);
-
-        // Do NOT use ->query() on the Scout builder:  when a queryCallback is
-        // set, Scout's getTotalCount() fires a second Meilisearch request to
-        // fetch *all* matching IDs so it can re-count via Eloquent — with
-        // hundreds of documents that second request times out and kills the
-        // RoadRunner worker.  Instead we call paginate() without ->query(),
-        // letting Scout hydrate models via a single whereIn, then we
-        // lazy-load the relations on the already-hydrated collection.
-        $paginator = Property::search($filter->q ?? '', function ($engine, $query, $options) use ($meiliFilters) {
-            if ($meiliFilters !== '') {
-                $options['filter'] = $meiliFilters;
-            }
-            $options['sort'] = ['created_at:desc'];
+        $paginator = Property::search($filter->q ?? '', function ($engine, $query, $options) use ($meiliFilters, $sort) {
+            $options['filter'] = $meiliFilters;
+            $options['sort']   = $sort;
             return $engine->search($query, $options);
         })->paginate($filter->per_page);
 
@@ -130,118 +127,36 @@ class PropertyRepository implements PropertyRepositoryInterface
     // -------------------------------------------------------------------------
 
     /**
-     * Eloquent-only browse for soft-deleted properties.
-     * Used when $filter->trashed === true because Scout removes deleted
-     * records from the Meilisearch index and cannot serve them.
-     */
-    private function browseTrashedWithEloquent(PropertyFilterDTO $filter, ?int $ownedBy = null): LengthAwarePaginator
-    {
-        $query = Property::onlyTrashed()->with(self::WITH);
-
-        // Scope to the caller's own records when they don't have unrestricted access.
-        // Super-Admin reaches here with $ownedBy = null (Gate::before bypass, no
-        // direct permission), so they see everything.
-        if ($ownedBy !== null) {
-            $query->where('created_by', $ownedBy);
-        }
-
-        if ($filter->listing_type !== null) {
-            $query->where('listing_type', $filter->listing_type);
-        }
-        if ($filter->status !== null) {
-            $query->where('status', $filter->status);
-        }
-        if ($filter->price_min !== null) {
-            $query->where('price', '>=', $filter->price_min);
-        }
-        if ($filter->price_max !== null) {
-            $query->where('price', '<=', $filter->price_max);
-        }
-        if ($filter->property_type_id !== null) {
-            $query->where('property_type_id', $filter->property_type_id);
-        }
-        if ($filter->region_id !== null) {
-            $query->where('region_id', $filter->region_id);
-        }
-        if ($filter->country_region_id !== null) {
-            $query->where('country_region_id', $filter->country_region_id);
-        }
-        if ($filter->root_region_id !== null) {
-            $query->where('root_region_id', $filter->root_region_id);
-        }
-        if (!empty($filter->q)) {
-            $query->where(function ($q) use ($filter) {
-                $q->where('title', 'ilike', "%{$filter->q}%")
-                    ->orWhere('description', 'ilike', "%{$filter->q}%")
-                    ->orWhere('address', 'ilike', "%{$filter->q}%");
-            });
-        }
-
-        return $query->latest('deleted_at')->paginate($filter->per_page);
-    }
-
-    /**
-     * Eloquent-only browse for unpublished properties.
-     * Used when $filter->is_published === false because ownership scoping is
-     * required for agents — they may only browse their own unpublished listings.
-     * Super-Admin reaches here with $ownedBy = null (Gate::before bypass, no
-     * direct permission), so they see everything.
-     */
-    private function browseUnpublishedWithEloquent(PropertyFilterDTO $filter, ?int $ownedBy = null): LengthAwarePaginator
-    {
-        $query = Property::where('is_published', false)->with(self::WITH);
-
-        // Scope to the caller's own records when they don't have unrestricted access.
-        if ($ownedBy !== null) {
-            $query->where('created_by', $ownedBy);
-        }
-
-        if ($filter->listing_type !== null) {
-            $query->where('listing_type', $filter->listing_type);
-        }
-        if ($filter->status !== null) {
-            $query->where('status', $filter->status);
-        }
-        if ($filter->price_min !== null) {
-            $query->where('price', '>=', $filter->price_min);
-        }
-        if ($filter->price_max !== null) {
-            $query->where('price', '<=', $filter->price_max);
-        }
-        if ($filter->property_type_id !== null) {
-            $query->where('property_type_id', $filter->property_type_id);
-        }
-        if ($filter->region_id !== null) {
-            $query->where('region_id', $filter->region_id);
-        }
-        if ($filter->country_region_id !== null) {
-            $query->where('country_region_id', $filter->country_region_id);
-        }
-        if ($filter->root_region_id !== null) {
-            $query->where('root_region_id', $filter->root_region_id);
-        }
-        if (!empty($filter->q)) {
-            $query->where(function ($q) use ($filter) {
-                $q->where('title', 'ilike', "%{$filter->q}%")
-                    ->orWhere('description', 'ilike', "%{$filter->q}%")
-                    ->orWhere('address', 'ilike', "%{$filter->q}%");
-            });
-        }
-
-        return $query->latest('created_at')->paginate($filter->per_page);
-    }
-
-    /**
      * Build a Meilisearch filter string from the DTO.
+     *
+     * Relies on scout.soft_delete = true, which keeps soft-deleted documents in
+     * the index tagged with __soft_deleted = 1.  Normal browsing therefore always
+     * adds __soft_deleted = 0 and the trashed browse flips it to 1.  When browsing
+     * trashed the is_published filter is intentionally omitted — it is not relevant
+     * to deleted listings and skipping it avoids accidental mismatches.
+     *
+     * The optional $ownedBy parameter adds a created_by = {id} clause so that
+     * agents are scoped to their own listings (unpublished or trashed) while
+     * Super-Admin, which passes null, sees everything.
      *
      * Meilisearch filter syntax:
      *   field = value AND field >= value AND field <= value ...
      */
-    private function buildMeilisearchFilters(PropertyFilterDTO $filter): string
+    private function buildMeilisearchFilters(PropertyFilterDTO $filter, ?int $ownedBy = null): string
     {
         $parts = [];
 
-        if ($filter->is_published !== null) {
+        // Soft-delete visibility — always present so the wrong bucket is never leaked.
+        $parts[] = $filter->trashed === true ? '__soft_deleted = 1' : '__soft_deleted = 0';
+
+        // Ownership scoping for agents browsing their own unpublished / trashed listings.
+        // Super-Admin arrives with $ownedBy = null and therefore sees everything.
+        if ($ownedBy !== null) {
+            $parts[] = "created_by = {$ownedBy}";
+        }
+
+        // is_published is irrelevant (and potentially misleading) for deleted listings.
+        if ($filter->is_published !== null && $filter->trashed !== true) {
             $parts[] = 'is_published = ' . ($filter->is_published ? 'true' : 'false');
         }
         if ($filter->listing_type !== null) {

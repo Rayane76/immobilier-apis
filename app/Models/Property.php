@@ -170,6 +170,10 @@ class Property extends Model implements HasMedia
             'published_at'      => $this->published_at?->timestamp,
             'available_at'      => $this->available_at?->timestamp,
             'created_at'        => $this->created_at?->timestamp,
+            'deleted_at'        => $this->deleted_at?->timestamp,
+
+            // Needed for ownership-scoped Meilisearch queries (e.g. unpublished / trashed).
+            'created_by'        => $this->created_by,
         ];
 
         // Spread each dynamic attribute as a flat top-level field.

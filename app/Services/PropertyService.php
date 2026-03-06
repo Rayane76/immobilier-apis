@@ -25,11 +25,13 @@ class PropertyService
 
     /**
      * Paginated list with main_image_url attached to each item.
-     * Uses Meilisearch when a search query is present, Eloquent for trashed.
+     * All cases (normal, unpublished, trashed) go through Meilisearch.
      *
-     * When browsing trashed properties, $user is used to determine ownership
-     * scoping: agents (hasDirectPermission) are scoped to their own records;
-     * Super-Admin (granted via Gate::before, not directly) sees everything.
+     * $user drives the $ownedBy parameter passed to the repository:
+     *   - Agents with a direct permission are scoped to their own records
+     *     (created_by = user.id is added as a Meilisearch filter).
+     *   - Super-Admin reaches here via Gate::before (no direct permission),
+     *     so $ownedBy stays null and no ownership filter is applied.
      */
     public function paginate(PropertyFilterDTO $filter, ?User $user = null): LengthAwarePaginator
     {
