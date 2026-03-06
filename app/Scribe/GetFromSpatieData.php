@@ -30,6 +30,12 @@ class GetFromSpatieData extends Strategy
 {
     public function __invoke(ExtractedEndpointData $endpointData, array $routeRules = []): ?array
     {
+        // GET / HEAD parameters are handled by GetSpatieDataAsQueryParams.
+        $httpMethods = array_map('strtoupper', $endpointData->httpMethods);
+        if (array_intersect($httpMethods, ['GET', 'HEAD'])) {
+            return null;
+        }
+
         $method = $endpointData->method;
 
         foreach ($method->getParameters() as $param) {
@@ -168,13 +174,6 @@ class GetFromSpatieData extends Strategy
 
     private function exampleForType(string $type): mixed
     {
-        return match ($type) {
-            'integer' => 1,
-            'number'  => 1.5,
-            'boolean' => true,
-            'object'  => [],
-            'file'    => null,
-            default   => 'example',
-        };
+        return null;
     }
 }

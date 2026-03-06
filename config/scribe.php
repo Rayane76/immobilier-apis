@@ -234,6 +234,9 @@ return [
         ],
         'queryParameters' => [
             ...Defaults::QUERY_PARAMETERS_STRATEGIES,
+            // Spatie Laravel Data DTOs used on GET routes expose their fields
+            // as query parameters rather than body parameters.
+            \App\Scribe\GetSpatieDataAsQueryParams::class,
         ],
         'bodyParameters' => [
             ...Defaults::BODY_PARAMETERS_STRATEGIES,

@@ -31,15 +31,24 @@ class PropertyRepository implements PropertyRepositoryInterface
 
         $meiliFilters = $this->buildMeilisearchFilters($filter);
 
-        return Property::search($filter->q ?? '', function ($engine, $query, $options) use ($meiliFilters) {
+        // Do NOT use ->query() on the Scout builder:  when a queryCallback is
+        // set, Scout's getTotalCount() fires a second Meilisearch request to
+        // fetch *all* matching IDs so it can re-count via Eloquent — with
+        // hundreds of documents that second request times out and kills the
+        // RoadRunner worker.  Instead we call paginate() without ->query(),
+        // letting Scout hydrate models via a single whereIn, then we
+        // lazy-load the relations on the already-hydrated collection.
+        $paginator = Property::search($filter->q ?? '', function ($engine, $query, $options) use ($meiliFilters) {
             if ($meiliFilters !== '') {
                 $options['filter'] = $meiliFilters;
             }
             $options['sort'] = ['created_at:desc'];
             return $engine->search($query, $options);
-        })
-            ->query(fn($q) => $q->with(self::WITH))
-            ->paginate($filter->per_page);
+        })->paginate($filter->per_page);
+
+        \Illuminate\Database\Eloquent\Collection::make($paginator->items())->loadMissing(self::WITH);
+
+        return $paginator;
     }
 
     public function findById(int $id): ?Property
