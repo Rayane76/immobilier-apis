@@ -42,6 +42,10 @@ class PropertyController extends Controller
             $this->authorize('viewAnyDeleted', Property::class);
         }
 
+        if ($filter->is_published === false) {
+            $this->authorize('viewAnyUnpublished', Property::class);
+        }
+
         return response()->json($this->propertyService->paginate($filter, $request->user()));
     }
 
@@ -62,6 +66,8 @@ class PropertyController extends Controller
 
         if ($property->trashed()) {
             $this->authorize('viewDeleted', $property);
+        } elseif (!$property->is_published) {
+            $this->authorize('viewUnpublished', $property);
         } else {
             $this->authorize('view', $property);
         }

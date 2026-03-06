@@ -43,6 +43,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Handle CORS before any routing so preflight OPTIONS requests
         // are answered immediately without hitting auth or policy layers.
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+
+        // Decode JSON-serialised strings (e.g. objects sent via Swagger's
+        // multipart/form-data "object" fields) before validation runs.
+        $middleware->appendToGroup('api', \App\Http\Middleware\DecodeJsonFormFields::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 

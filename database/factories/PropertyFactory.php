@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Property;
+use App\Support\PropertyTitleGenerator;
 use App\Models\PropertyType;
 use App\Models\Region;
 use App\Models\User;
@@ -106,8 +107,7 @@ class PropertyFactory extends Factory
     public function configure()
     {
         return $this->afterMaking(function (Property $property) {
-            // Ensure title is generated correctly
-            $property->title = $property->generateTitle();
+            $property->title = PropertyTitleGenerator::generate($property);
         });
     }
 }

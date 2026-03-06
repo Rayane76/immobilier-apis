@@ -21,12 +21,37 @@ class PropertyPolicy
     }
 
     /**
-     * Anyone — including unauthenticated guests — can view a non-deleted property.
+     * Anyone — including unauthenticated guests — can view a published, non-deleted property.
      * Deleted properties are gated separately via viewDeleted().
+     * Unpublished properties are gated separately via viewUnpublished().
      */
     public function view(?User $user, Property $property): bool
     {
         return true;
+    }
+
+    /**
+     * View a single unpublished property.
+     *
+     * Agents may only view their own unpublished listings (e.g. drafts they are
+     * still editing). Super-Admin bypasses this via Gate::before.
+     */
+    public function viewUnpublished(User $user, Property $property): bool
+    {
+        return $user->can('ViewUnpublished:Property')
+            && $property->created_by === $user->id;
+    }
+
+    /**
+     * Browse unpublished listings (index with ?is_published=false).
+     *
+     * Both agents and Super-Admin pass this check. The repository then scopes
+     * the results to created_by = user->id for agents (hasDirectPermission),
+     * while Super-Admin (granted via Gate::before, not directly) sees everything.
+     */
+    public function viewAnyUnpublished(User $user): bool
+    {
+        return $user->can('ViewAnyUnpublished:Property');
     }
 
     /**

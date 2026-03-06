@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Data\Property\CreatePropertyDTO;
+use App\Support\PropertyTitleGenerator;
 use App\Data\Property\PropertyDTO;
 use App\Data\Property\PropertyFilterDTO;
 use App\Data\Property\UpdatePropertyDTO;
@@ -37,6 +38,13 @@ class PropertyService
         if ($filter->trashed && $user !== null) {
             // hasDirectPermission = false means Super-Admin granted it via Gate::before
             $ownedBy = $user->hasDirectPermission('ViewAnyDeleted:Property')
+                ? $user->id
+                : null;
+        }
+
+        if ($filter->is_published === false && $user !== null) {
+            // hasDirectPermission = false means Super-Admin granted it via Gate::before
+            $ownedBy = $user->hasDirectPermission('ViewAnyUnpublished:Property')
                 ? $user->id
                 : null;
         }
@@ -88,7 +96,7 @@ class PropertyService
 
         // Auto-generate title if the caller did not supply one
         if (empty($data->title)) {
-            $property->title = $property->generateTitle();
+            $property->title = PropertyTitleGenerator::generate($property);
             $property->save();
         }
 

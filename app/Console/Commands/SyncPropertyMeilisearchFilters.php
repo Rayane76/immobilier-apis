@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Attribute;
-use App\Models\Property;
+use App\Support\PropertyAttributeHelper;
 use Illuminate\Console\Command;
 use Meilisearch\Client as MeilisearchClient;
 
@@ -43,7 +43,7 @@ class SyncPropertyMeilisearchFilters extends Command
         $dynamicKeys = Attribute::query()
             ->select('title')
             ->pluck('title')
-            ->map(fn(string $title) => Property::normalizeAttributeKey($title))
+            ->map(fn(string $title) => PropertyAttributeHelper::normalizeAttributeKey($title))
             ->unique()
             ->values()
             ->all();

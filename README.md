@@ -12,8 +12,13 @@ Elle couvre l'authentification, la gestion des rôles/permissions, la publicatio
 2. [Modèles et relations](#2-modèles-et-relations)
 3. [Trigger PostgreSQL — validation des attributs](#3-trigger-postgresql--validation-des-attributs)
 4. [Lancer le projet](#4-lancer-le-projet)
-5. [Stack technique](#5-stack-technique)
-6. [Prochaines fonctionnalités](#6-prochaines-fonctionnalités)
+5. [Tester via Swagger — exemples de données](#5-tester-via-swagger--exemples-de-données)
+   - [Authentification](#51-authentification)
+   - [Propriétés](#52-propriétés)
+   - [Rôles](#53-rôles)
+   - [Utilisateurs](#54-utilisateurs)
+6. [Stack technique](#6-stack-technique)
+7. [Prochaines fonctionnalités](#7-prochaines-fonctionnalités)
 
 ---
 
@@ -139,7 +144,7 @@ Table `properties`. Cœur du domaine : représente une annonce immobilière.
 - **JSONB + index GIN** : le champ `attributes` bénéficie d'un index GIN pour des requêtes de filtrage performantes (`attributes @> '{"rooms": 3}'`).
 - **Scout / MeiliSearch** : les attributs dynamiques sont indexés à plat avec le préfixe `attr_` (ex. `attr_surface`, `attr_rooms`) pour des filtres scalaires ultra-rapides côté MeiliSearch.
 - **Génération de titre automatique** : la méthode `generateTitle()` compose le titre sous la forme `[Type] [valeur attribut] [label] à [Wilaya - Commune]` en se basant sur l'attribut marqué `is_used_for_title` pour ce type de bien.
-- **Médias** : via `spatie/laravel-medialibrary`, la propriété expose deux collections : `main_image` (image unique) et `images` (galerie).
+- **Médias** : via `spatie/laravel-medialibrary`, la propriété expose deux collections : `main_image` (image unique) et `images` (galerie). Chaque image uploadée (JPG, PNG ou WebP) est **convertie en WebP à la qualité 85** avant d'être transmise à MediaLibrary — aucun original n'est jamais stocké dans MinIO.
 
 ---
 
@@ -285,9 +290,254 @@ docker compose up --build
 L'API sera accessible sur `http://localhost:8080` (ou le port défini par `NGINX_PORT`).  
 La console MinIO sera disponible sur `http://localhost:9001`.
 
+### Utilisateurs de test (seedés automatiquement)
+
+Le seeder `PermissionSeeder` crée trois utilisateurs prêts à l'emploi :
+
+| Rôle | Email | Mot de passe |
+|---|---|---|
+| **Super-Admin** | `super-admin@example.com` | `admin-password` |
+| **agent** | `agent@example.com` | `agent-password` |
+| **visiteur** | `visiteur@example.com` | `visiteur-password` |
+
+> Ces comptes sont destinés au développement et aux tests uniquement. Pensez à les supprimer ou à changer leurs mots de passe en production.
+
+### Données de test — propriétés seedées
+
+Le seeder `PropertySeeder` insère **50 000 propriétés** générées aléatoirement, couvrant tous les types de biens, régions et attributs disponibles. Les **500 premières** se voient attribuer des images (image principale + galerie).
+
+Ce volume est intentionnel : il permet de démontrer les performances de l'application sous charge réaliste — pagination Eloquent, recherche et filtrage MeiliSearch sur des attributs dynamiques aplatis, et requêtes JSONB avec index GIN sur PostgreSQL.
+
 ---
 
-## 5. Stack technique
+## 5. Tester via Swagger — exemples de données
+
+La documentation interactive Swagger est disponible sur **`http://localhost:8080/docs`**.  
+Pour les routes protégées, saisissez votre token Bearer obtenu via `POST /auth/login`.
+
+> **IDs de référence (base seedée par défaut)**  
+> Les exemples ci-dessous utilisent les IDs créés par les seeders. Si la base a été re-seedée, ces IDs restent stables :
+>
+> | Ressource | ID | Valeur |
+> |---|---|---|
+> | Pays | `1` | Algeria |
+> | Wilaya | `46` | Alger |
+> | Commune | `48` | Alger Centre |
+> | PropertyType | `1` | appartement |
+> | PropertyType | `2` | villa |
+> | PropertyType | `3` | terrain |
+> | PropertyType | `4` | maison |
+
+---
+
+### 5.1 Authentification
+
+#### `POST /auth/register`
+
+```json
+{
+  "name": "Alice Dupont",
+  "email": "alice@example.com",
+  "password": "motdepasse123"
+}
+```
+
+#### `POST /auth/login`
+
+```json
+{
+  "email": "super-admin@example.com",
+  "password": "admin-password"
+}
+```
+
+> Copiez la valeur de `token` dans la réponse et collez-la dans le champ **Authorize** de Swagger (`Bearer <token>`).
+
+---
+
+### 5.2 Propriétés
+
+#### `GET /properties` — paramètres de query
+
+```
+q=appartement
+listing_type=sale
+status=available
+price_min=5000000
+price_max=20000000
+property_type_id=1
+root_region_id=46
+per_page=10
+```
+
+#### `GET /properties/{id}`
+
+```
+id = 1
+```
+
+#### `POST /properties` — `multipart/form-data` _(auth requise)_
+
+Ce endpoint utilise `multipart/form-data` pour accepter les fichiers. Dans Swagger, remplissez chaque champ séparément :
+
+| Champ | Valeur exemple |
+|---|---|
+| `property_type_id` | `1` |
+| `listing_type` | `sale` |
+| `description` | `Bel appartement lumineux au cœur d'Alger Centre, idéalement situé.` |
+| `attributes` | `{"surface": 85, "nombre de pièces": 3, "Etage": 2, "Parking sous sol": true}` |
+| `price` | `12500000` |
+| `country_region_id` | `1` |
+| `root_region_id` | `46` |
+| `region_id` | `48` |
+| `address` | `12 Rue Didouche Mourad, Alger Centre` |
+| `is_published` | `true` |
+| `status` | `available` |
+| `available_at` | `2026-04-01` |
+| `main_image` | _(sélectionner un fichier image JPG/PNG ≤ 5 Mo)_ |
+
+#### `POST /properties/{id}` ou `PATCH /properties/{id}` _(auth requise)_
+
+```json
+{
+  "price": 11000000,
+  "description": "Grand appartement rénové, vue dégagée, parking inclus.",
+  "status": "available",
+  "is_published": true
+}
+```
+
+> Seuls les champs à modifier sont nécessaires (PATCH partiel).
+
+#### `DELETE /properties/{id}` _(auth requise — soft delete)_
+
+```
+id = 1
+```
+
+#### `PATCH /properties/{id}/restore` _(auth requise)_
+
+```
+id = 1
+```
+
+#### `DELETE /properties/{id}/force` _(auth requise — suppression définitive)_
+
+```
+id = 1
+```
+
+---
+
+### 5.3 Rôles
+
+#### `GET /roles` — aucun corps
+
+#### `POST /roles` _(auth requise)_
+
+```json
+{
+  "name": "moderateur"
+}
+```
+
+#### `GET /roles/{id}`
+
+```
+id = 1
+```
+
+#### `PATCH /roles/{id}` _(auth requise)_
+
+```json
+{
+  "name": "coordinateur"
+}
+```
+
+#### `DELETE /roles/{id}` _(auth requise)_
+
+```
+id = 1
+```
+
+#### `POST /roles/{id}/permissions` — assigner une permission _(auth requise)_
+
+```json
+{
+  "permission": "Create:Property"
+}
+```
+
+> Permissions disponibles : `Create:Property`, `Update:Property`, `Delete:Property`, `Restore:Property`, `ForceDelete:Property`, `ForceDeleteAny:Property`, `ViewDeleted:Property`, `ViewAnyDeleted:Property`, `Create:Attribute`, `Update:Attribute`, `Delete:Attribute`, `Create:PropertyType`, `Create:Region`, `Create:PropertyTypeAttribute`, `ViewAny:User`, `AssignRole:User`, `AssignPermission:Role`
+
+#### `DELETE /roles/{id}/permissions` — révoquer une permission _(auth requise)_
+
+```json
+{
+  "permission": "Create:Property"
+}
+```
+
+---
+
+### 5.4 Utilisateurs
+
+#### `GET /users` — aucun corps _(auth requise)_
+
+#### `POST /users` _(auth requise)_
+
+```json
+{
+  "name": "Bob Martin",
+  "email": "bob@example.com",
+  "password": "motdepasse123",
+  "password_confirmation": "motdepasse123"
+}
+```
+
+#### `GET /users/{id}` _(auth requise)_
+
+```
+id = 1
+```
+
+#### `PATCH /users/{id}` _(auth requise)_
+
+```json
+{
+  "name": "Bob Martin Jr.",
+  "email": "bobjr@example.com"
+}
+```
+
+#### `DELETE /users/{id}` _(auth requise)_
+
+```
+id = 1
+```
+
+#### `POST /users/{id}/roles` — assigner un rôle _(auth requise)_
+
+```json
+{
+  "role": "agent"
+}
+```
+
+> Rôles disponibles : `Super-Admin`, `agent`, `visiteur` (et tout rôle créé via `POST /roles`).
+
+#### `DELETE /users/{id}/roles` — révoquer un rôle _(auth requise)_
+
+```json
+{
+  "role": "agent"
+}
+```
+
+---
+
+## 6. Stack technique
 
 ### PostgreSQL 16
 
@@ -304,6 +554,7 @@ Les routes publiques `GET /properties` utilisent MeiliSearch dès qu'un paramèt
 
 Stockage objet compatible S3 auto-hébergé.  
 Utilisé par **`spatie/laravel-medialibrary`** pour stocker les images des propriétés (image principale + galerie).  
+Toutes les images sont **converties en WebP (qualité 85) côté serveur** avant l'envoi — seuls des fichiers `.webp` atterrissent dans le bucket, ce qui réduit significativement le volume stocké et la bande passante de livraison.  
 À la création du conteneur, un service `minio-init` crée automatiquement le bucket et le rend accessible en lecture publique.
 
 ### Laravel Octane + RoadRunner
@@ -334,7 +585,7 @@ Elle liste l'ensemble des endpoints, leurs paramètres, les corps de requête at
 
 ---
 
-## 6. Prochaines fonctionnalités
+## 7. Prochaines fonctionnalités
 
 ### Files d'attente avec Redis
 

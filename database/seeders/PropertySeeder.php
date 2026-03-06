@@ -153,7 +153,7 @@ class PropertySeeder extends Seeder
         }
 
         $sampleSize = 500;
-        $sampleIds  = Property::inRandomOrder()->limit($sampleSize)->pluck('id');
+        $sampleIds  = Property::orderBy('id')->limit($sampleSize)->pluck('id');
 
         $this->command->getOutput()->writeln('');
         $this->command->getOutput()->writeln("[PropertySeeder] Attaching seed images to {$sampleIds->count()} sample properties...");

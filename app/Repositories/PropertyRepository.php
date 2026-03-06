@@ -29,6 +29,12 @@ class PropertyRepository implements PropertyRepositoryInterface
             return $this->browseTrashedWithEloquent($filter, $ownedBy);
         }
 
+        // Browsing unpublished listings requires ownership scoping for agents,
+        // so we bypass Meilisearch and use Eloquent directly.
+        if ($filter->is_published === false) {
+            return $this->browseUnpublishedWithEloquent($filter, $ownedBy);
+        }
+
         $meiliFilters = $this->buildMeilisearchFilters($filter);
 
         // Do NOT use ->query() on the Scout builder:  when a queryCallback is
@@ -172,6 +178,57 @@ class PropertyRepository implements PropertyRepositoryInterface
         }
 
         return $query->latest('deleted_at')->paginate($filter->per_page);
+    }
+
+    /**
+     * Eloquent-only browse for unpublished properties.
+     * Used when $filter->is_published === false because ownership scoping is
+     * required for agents — they may only browse their own unpublished listings.
+     * Super-Admin reaches here with $ownedBy = null (Gate::before bypass, no
+     * direct permission), so they see everything.
+     */
+    private function browseUnpublishedWithEloquent(PropertyFilterDTO $filter, ?int $ownedBy = null): LengthAwarePaginator
+    {
+        $query = Property::where('is_published', false)->with(self::WITH);
+
+        // Scope to the caller's own records when they don't have unrestricted access.
+        if ($ownedBy !== null) {
+            $query->where('created_by', $ownedBy);
+        }
+
+        if ($filter->listing_type !== null) {
+            $query->where('listing_type', $filter->listing_type);
+        }
+        if ($filter->status !== null) {
+            $query->where('status', $filter->status);
+        }
+        if ($filter->price_min !== null) {
+            $query->where('price', '>=', $filter->price_min);
+        }
+        if ($filter->price_max !== null) {
+            $query->where('price', '<=', $filter->price_max);
+        }
+        if ($filter->property_type_id !== null) {
+            $query->where('property_type_id', $filter->property_type_id);
+        }
+        if ($filter->region_id !== null) {
+            $query->where('region_id', $filter->region_id);
+        }
+        if ($filter->country_region_id !== null) {
+            $query->where('country_region_id', $filter->country_region_id);
+        }
+        if ($filter->root_region_id !== null) {
+            $query->where('root_region_id', $filter->root_region_id);
+        }
+        if (!empty($filter->q)) {
+            $query->where(function ($q) use ($filter) {
+                $q->where('title', 'ilike', "%{$filter->q}%")
+                    ->orWhere('description', 'ilike', "%{$filter->q}%")
+                    ->orWhere('address', 'ilike', "%{$filter->q}%");
+            });
+        }
+
+        return $query->latest('created_at')->paginate($filter->per_page);
     }
 
     /**

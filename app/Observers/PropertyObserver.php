@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Property;
+use App\Support\PropertyTitleGenerator;
 
 class PropertyObserver
 {
@@ -11,14 +12,7 @@ class PropertyObserver
      */
     public function creating(Property $property): void
     {
-        // Load related models if not already eager loaded to generate title
-        $property->loadMissing([
-            'propertyType.propertyTypeTitleAttribute.attribute',
-            'rootRegion',
-            'region'
-        ]);
-
-        $property->title = $property->generateTitle();
+        $property->title = PropertyTitleGenerator::generate($property);
     }
 
     /**
@@ -28,12 +22,7 @@ class PropertyObserver
     {
         // Regenerate title if any of the dependencies change
         if ($property->isDirty(['property_type_id', 'attributes', 'root_region_id', 'region_id'])) {
-            $property->loadMissing([
-                'propertyType.propertyTypeTitleAttribute.attribute',
-                'rootRegion',
-                'region'
-            ]);
-            $property->title = $property->generateTitle();
+            $property->title = PropertyTitleGenerator::generate($property);
         }
 
         if ($property->isDirty('is_published') && $property->is_published && !$property->published_at) {

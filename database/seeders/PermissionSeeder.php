@@ -70,6 +70,10 @@ class PermissionSeeder extends Seeder
         // ViewAnyDeleted:Property — browse the trashed listing (Super-Admin only in practice)
         Permission::create(['name' => 'ViewDeleted:Property',      'guard_name' => 'web']);
         Permission::create(['name' => 'ViewAnyDeleted:Property',   'guard_name' => 'web']);
+        // ViewUnpublished:Property  — view a single unpublished property (own record for agents)
+        // ViewAnyUnpublished:Property — browse unpublished listings (agents: own only; Super-Admin: all)
+        Permission::create(['name' => 'ViewUnpublished:Property',    'guard_name' => 'web']);
+        Permission::create(['name' => 'ViewAnyUnpublished:Property', 'guard_name' => 'web']);
 
         // create permissions for image model
         Permission::create(['name' => 'ViewAny:Image', 'guard_name' => 'web']);
@@ -137,6 +141,9 @@ class PermissionSeeder extends Seeder
             // Agents can browse their own deleted listings; the repository scopes
             // the query to created_by = user->id for non-Super-Admin callers.
             'ViewAnyDeleted:Property',
+            // Agents can view and browse their own unpublished listings (e.g. drafts)
+            'ViewUnpublished:Property',
+            'ViewAnyUnpublished:Property',
 
             // Image
             'ViewAny:Image',

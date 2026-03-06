@@ -140,12 +140,13 @@ class GetFromSpatieData extends Strategy
 
     private function phpTypeToScribe(string $type): string
     {
-        return match ($type) {
-            'int', 'integer'       => 'integer',
-            'float', 'double'      => 'number',
-            'bool', 'boolean'      => 'boolean',
-            'array'                => 'object',
-            default                => 'string',
+        return match (true) {
+            in_array($type, ['int', 'integer'], true)                  => 'integer',
+            in_array($type, ['float', 'double'], true)                 => 'number',
+            in_array($type, ['bool', 'boolean'], true)                 => 'boolean',
+            $type === 'array'                                           => 'object',
+            is_a($type, \Illuminate\Http\UploadedFile::class, true)    => 'file',
+            default                                                     => 'string',
         };
     }
 

@@ -13,6 +13,8 @@ class UserDTO extends Data
         public readonly string $email,
         /** @var string[] */
         public readonly array $roles,
+        /** @var string[] */
+        public readonly array $permissions,
     ) {}
 
     public static function fromModel(User $user): self
@@ -22,6 +24,7 @@ class UserDTO extends Data
             name: $user->name,
             email: $user->email,
             roles: $user->getRoleNames()->toArray(),
+            permissions: $user->getAllPermissions()->pluck('name')->toArray(),
         );
     }
 }

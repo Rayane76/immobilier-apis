@@ -56,8 +56,6 @@ class AuthService
         return new AuthResponseDTO(
             token: $token,
             user: UserDTO::fromModel($user),
-            roles: $user->getRoleNames()->toArray(),
-            permissions: $user->getAllPermissions()->pluck('name')->toArray(),
         );
     }
 }

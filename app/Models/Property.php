@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PropertyAttributeHelper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -115,61 +116,6 @@ class Property extends Model implements HasMedia
     }
 
     // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Generate property title based on type, attributes and location.
-     */
-    public function generateTitle(): string
-    {
-        // Ensure necessary relationships are loaded to avoid N+1
-        if (!$this->relationLoaded('propertyType')) {
-            $this->load([
-                'propertyType.propertyTypeTitleAttribute.attribute',
-                'rootRegion',
-                'region'
-            ]);
-        }
-
-        $propertyType = $this->propertyType;
-        $titleParts = [];
-
-        // 1. Property Type Title
-        $titleParts[] = ucfirst($propertyType->title);
-
-        // 2. Attribute value + label if configured
-        $titleAttributePivot = $propertyType->propertyTypeTitleAttribute->first();
-        if ($titleAttributePivot && $titleAttributePivot->attribute) {
-            $attribute = $titleAttributePivot->attribute;
-            $attributeKey = $attribute->title;
-
-            // Check if attribute exists in the JSON attributes
-            if (isset($this->attributes[$attributeKey])) {
-                $value = $this->attributes[$attributeKey];
-                $label = $attribute->property_title_label;
-
-                $titleParts[] = trim($value . ' ' . $label);
-            }
-        }
-
-        // 3. Location: à RootRegion - Region
-        $location = 'à ';
-        if ($this->rootRegion) {
-            $location .= $this->rootRegion->name;
-        }
-        if ($this->region) {
-            $location .= ($this->rootRegion ? ' - ' : '') . $this->region->name;
-        }
-
-        if (trim($location) !== 'à') {
-            $titleParts[] = $location;
-        }
-
-        return implode(' ', $titleParts);
-    }
-
-    // -------------------------------------------------------------------------
     // Scout / Meilisearch
     // -------------------------------------------------------------------------
 
@@ -231,90 +177,10 @@ class Property extends Model implements HasMedia
         //   1. Avoid collisions with the fixed fields above
         //   2. Produce clean, predictable Meilisearch filter expressions
         //   3. Allow Meilisearch to build a direct inverted index per attribute
-        foreach ($this->attributes ?? [] as $key => $value) {
-            $doc[$this->normalizeAttributeKey($key)] = $value;
+        foreach ($this->getAttribute('attributes') ?? [] as $key => $value) {
+            $doc[PropertyAttributeHelper::normalizeAttributeKey($key)] = $value;
         }
 
         return $doc;
-    }
-
-    /**
-     * Normalize a dynamic attribute key to a safe, ASCII Meilisearch field name.
-     *
-     * Examples:
-     *   "nombre de pièces"  → "attr_nombre_de_pieces"
-     *   "Parking sous sol"  → "attr_parking_sous_sol"
-     *   "type de terrain"   → "attr_type_de_terrain"
-     */
-    public static function normalizeAttributeKey(string $key): string
-    {
-        $key = mb_strtolower($key);
-        $key = strtr($key, [
-            'é' => 'e',
-            'è' => 'e',
-            'ê' => 'e',
-            'ë' => 'e',
-            'à' => 'a',
-            'â' => 'a',
-            'á' => 'a',
-            'î' => 'i',
-            'ï' => 'i',
-            'í' => 'i',
-            'ô' => 'o',
-            'ö' => 'o',
-            'ó' => 'o',
-            'ù' => 'u',
-            'û' => 'u',
-            'ü' => 'u',
-            'ú' => 'u',
-            'ç' => 'c',
-            'ñ' => 'n',
-        ]);
-        $key = preg_replace('/[^a-z0-9]+/', '_', $key);
-
-        return 'attr_' . trim($key, '_');
-    }
-
-    // -------------------------------------------------------------------------
-    // Scopes
-    // -------------------------------------------------------------------------
-
-    public function scopePublished($query)
-    {
-        return $query->where('is_published', true);
-    }
-
-    public function scopeForSale($query)
-    {
-        return $query->where('listing_type', self::LISTING_SALE);
-    }
-
-    public function scopeForRent($query)
-    {
-        return $query->where('listing_type', self::LISTING_RENT);
-    }
-
-    public function scopeAvailable($query)
-    {
-        return $query->where('status', self::STATUS_AVAILABLE);
-    }
-
-    public function scopeOfType($query, int $propertyTypeId)
-    {
-        return $query->where('property_type_id', $propertyTypeId);
-    }
-
-    public function scopeInRegion($query, int $regionId)
-    {
-        return $query->where('region_id', $regionId);
-    }
-
-    /**
-     * Filter by a JSONB attribute value using Postgres containment (@>).
-     * e.g. Property::withAttribute('rooms', 4)->get()
-     */
-    public function scopeWithAttribute($query, string $key, mixed $value)
-    {
-        return $query->whereRaw('attributes @> ?', [json_encode([$key => $value])]);
     }
 }
