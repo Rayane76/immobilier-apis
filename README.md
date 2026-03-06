@@ -23,9 +23,9 @@ L'application suit une structure en couches classique, pensée pour la maintenab
 
 ```
 HTTP Request
-    └── Controller          ← reçoit la requête, délègue au service
-          └── FormRequest   ← valide les entrées (règles Laravel)
-          └── Service       ← contient la logique métier
+    └── Controller      ← reçoit la requête, délègue au service
+          └── DTO       ← valide les entrées (spatie/laravel-data)
+          └── Service   ← contient la logique métier
                 └── Repository  ← abstrait l'accès aux données (Eloquent)
                       └── Model ← mapping base de données
 ```
